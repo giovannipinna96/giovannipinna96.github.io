@@ -1,0 +1,284 @@
+{{- define "main" }}
+
+<article class="post-single">
+  <div class="post-content">
+
+    <!-- ===== 1. PROFILE SECTION (Photo + Bio) ===== -->
+    <div class="profile-academic">
+      <!-- LEFT COLUMN: Photo + Name + Social -->
+      <div class="profile-left">
+        <img src="{{ "images/profile.png" | absURL }}" alt="Giovanni Pinna" class="profile-avatar">
+        <h2 class="profile-name">Giovanni Pinna</h2>
+        <div class="profile-role">{{ site.Params.description }}</div>
+        <div class="profile-org">University of Trieste</div>
+        {{- partial "social-icons.html" . }}
+      </div>
+      <!-- RIGHT COLUMN: Bio text -->
+      <div class="profile-right">
+        {{- if eq site.Language.Lang "it" }}
+        <h1>Ciao!</h1>
+        <p>Sono <strong>Giovanni Pinna</strong>, un Ricercatore e Ingegnere AI di <strong>Trieste, Italia</strong>. Ho conseguito il <strong>Dottorato di Ricerca in Data Science &amp; Intelligenza Artificiale Applicata</strong> presso l'Universit&agrave; di Trieste (marzo 2025).</p>
+        <p>La mia ricerca si concentra sull'intersezione tra <strong>Natural Language Processing</strong>, <strong>Large Language Models</strong> e <strong>Computazione Evolutiva</strong> &mdash; in particolare sull'ottimizzazione del codice generato dai LLM attraverso tecniche di Genetic Improvement e sullo sviluppo di metriche di valutazione per sistemi Text-to-SQL.</p>
+        <p>Ho esperienza internazionale presso l'<strong>University College London</strong> (CREST Centre) e la <strong>NOVA IMS</strong> di Lisbona, e sono autore di 10+ pubblicazioni in sedi internazionali come Scientific Reports (Nature/Springer), IEEE Access e EuroGP.</p>
+        {{- else }}
+        <h1>Welcome!</h1>
+        <p>I am <strong>Giovanni Pinna</strong>, an <strong>AI Researcher and Engineer</strong> based in <strong>Trieste, Italy</strong>. I hold a <strong>Ph.D. in Applied Data Science &amp; Artificial Intelligence</strong> from the University of Trieste (March 2025).</p>
+        <p>My research focuses on the intersection of <strong>Natural Language Processing</strong>, <strong>Large Language Models</strong>, and <strong>Evolutionary Computation</strong> &mdash; particularly on improving LLM-generated code through Genetic Improvement techniques and developing evaluation metrics for Text-to-SQL systems.</p>
+        <p>I have international research experience at <strong>University College London (UCL)</strong> in London, UK and <strong>NOVA IMS</strong> in Lisbon, Portugal. I am the author of 10+ publications in top international venues including Scientific Reports (Nature), IEEE Access, and EuroGP.</p>
+        {{- end }}
+      </div>
+    </div>
+
+    <!-- ===== INTERESTS / EDUCATION / EXPERIENCE — 3-column band ===== -->
+    <div class="info-band">
+      <!-- Column 1: Interests -->
+      <div class="info-col">
+        <h3>{{ if eq site.Language.Lang "it" }}Interessi{{ else }}Interests{{ end }}</h3>
+        <ul class="info-list">
+          <li><span class="info-icon">💬</span> NLP &amp; Large Language Models</li>
+          <li><span class="info-icon">🗄️</span> Text-to-SQL</li>
+          <li><span class="info-icon">🧬</span> Genetic Improvement</li>
+          <li><span class="info-icon">🤖</span> AI Coding Agents</li>
+          <li><span class="info-icon">🔍</span> RAG Systems</li>
+        </ul>
+      </div>
+      <!-- Column 2: Education -->
+      <div class="info-col">
+        <h3>{{ if eq site.Language.Lang "it" }}Formazione{{ else }}Education{{ end }}</h3>
+        <ul class="info-list info-list-edu">
+          <li>
+            <span class="info-icon">🎓</span>
+            <div>
+              <div class="info-title">Ph.D. Applied Data Science &amp; AI</div>
+              <div class="info-sub"><a href="https://www.units.it/">University of Trieste</a>, 2023 – 2025</div>
+            </div>
+          </li>
+          <li>
+            <span class="info-icon">🎓</span>
+            <div>
+              <div class="info-title">M.Sc. Computer Science Engineering</div>
+              <div class="info-sub"><a href="https://www.units.it/">University of Trieste</a>, 2019 – 2022</div>
+            </div>
+          </li>
+          <li>
+            <span class="info-icon">🎓</span>
+            <div>
+              <div class="info-title">B.Sc. Computer Science Engineering</div>
+              <div class="info-sub"><a href="https://www.units.it/">University of Trieste</a>, 2015 – 2019</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <!-- Column 3: Experience -->
+      <div class="info-col">
+        <h3>{{ if eq site.Language.Lang "it" }}Esperienza{{ else }}Experience{{ end }}</h3>
+        <ul class="info-list info-list-edu">
+          <li>
+            <span class="info-icon">🏛️</span>
+            <div>
+              <div class="info-title">Applied AI Scientist</div>
+              <div class="info-sub"><a href="#">PLUS S.r.l. / Area Science Park</a>, 2023 – 2025</div>
+            </div>
+          </li>
+          <li>
+            <span class="info-icon">🇬🇧</span>
+            <div>
+              <div class="info-title">Visiting Researcher</div>
+              <div class="info-sub"><a href="https://www.ucl.ac.uk/">UCL</a> — CREST Centre, Sep – Dec 2025</div>
+            </div>
+          </li>
+          <li>
+            <span class="info-icon">🇵🇹</span>
+            <div>
+              <div class="info-title">Visiting Researcher</div>
+              <div class="info-sub"><a href="https://www.novaims.unl.pt/">NOVA IMS</a> — Lisbon, 2024 &amp; 2025</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===== 2. NEWS SECTION ===== -->
+    <h2 class="section-heading">{{ if eq site.Language.Lang "it" }}🗞️ Novit&agrave;{{ else }}🗞️ News{{ end }}</h2>
+    <ul class="news-list">
+      <li>
+        <span class="news-date">Apr 2026</span>
+        <span class="news-text">{{ if eq site.Language.Lang "it" }}Pubblicato due papers &ldquo;Comparing ai coding agents: A task-stratified analysis of pull request acceptance&rdquo; e &ldquo;Analyzing Message-Code Inconsistency in AI Coding Agent-Authored Pull Requests&rdquo; su <strong>MSR 2026</strong>.{{ else }}Published two papers &ldquo;Comparing ai coding agents: A task-stratified analysis of pull request acceptance&rdquo; and &ldquo;Analyzing Message-Code Inconsistency in AI Coding Agent-Authored Pull Requests&rdquo; at <strong>MSR 2026</strong> .{{ end }}</span>
+      </li>
+      <li>
+        <span class="news-date">Mar 2025</span>
+        <span class="news-text">{{ if eq site.Language.Lang "it" }}Completato il Dottorato di Ricerca in Applied Data Science &amp; AI presso l'Universit&agrave; di Trieste!{{ else }}Completed my Ph.D. in Applied Data Science &amp; AI at the University of Trieste!{{ end }}</span>
+      </li>
+      <li>
+        <span class="news-date">Sep 2025</span>
+        <span class="news-text">{{ if eq site.Language.Lang "it" }}Iniziato il periodo di ricerca presso University College London (UCL), gruppo della Prof.ssa Federica Sarro.{{ else }}Started visiting research at University College London (UCL), in Prof. Federica Sarro's group.{{ end }}</span>
+      </li>
+      <li>
+        <span class="news-date">2025</span>
+        <span class="news-text">{{ if eq site.Language.Lang "it" }}Pubblicato &ldquo;Redefining Text-to-SQL Metrics&rdquo; su <strong>Scientific Reports</strong> (Nature) e 2 paper a SSBSE 2025 (GA4GC e HotCat).{{ else }}Published &ldquo;Redefining Text-to-SQL Metrics&rdquo; in <strong>Scientific Reports</strong> (Nature/Springer) and 2 papers at SSBSE 2025 (GA4GC and HotCat).{{ end }}</span>
+      </li>
+    </ul>
+
+    <!-- ===== 3. PHD THESIS SECTION ===== -->
+    <h2 class="section-heading">{{ if eq site.Language.Lang "it" }}🎓 Tesi di Dottorato{{ else }}🎓 Ph.D. Thesis{{ end }}</h2>
+    {{- $thesisPDF := "files/Giovanni_Pinna_PhD_Thesis.pdf" | absURL }}
+    {{- $thesisAria := cond (eq site.Language.Lang "it") "Apri il PDF della tesi di dottorato" "Open the Ph.D. thesis PDF" }}
+    <div class="thesis-card">
+      <a href="{{ $thesisPDF }}" target="_blank" rel="noopener" class="book-link" aria-label="{{ $thesisAria }}">
+        <div class="book-3d">
+          <div class="book-inner">
+            <div class="book-cover">
+              <img src="{{ "images/thesis_cover.png" | absURL }}" alt="Thesis Cover">
+            </div>
+            <div class="book-spine">
+              <img src="{{ "images/thesis_spine.png" | absURL }}" alt="Thesis Spine">
+            </div>
+          </div>
+        </div>
+      </a>
+      <div class="thesis-content">
+        <div class="thesis-title">
+          <a href="{{ $thesisPDF }}" target="_blank" rel="noopener">Application of Large Language Models: Addressing Real-World Challenges</a>
+        </div>
+        <div class="thesis-meta">Ph.D. Thesis — University of Trieste, 2025</div>
+        <div class="thesis-description">{{ if eq site.Language.Lang "it" }}I Large Language Models promettono di trasformare il modo in cui scriviamo codice, interroghiamo dati e accediamo alla conoscenza &mdash; ma mantengono davvero la promessa? Questa tesi affronta la domanda su quattro fronti: come valutare gli LLM, come possono democratizzare la conoscenza, come renderli affidabili e come distribuirli in modo sostenibile. Uno studio con utenti reali su testi giuridici rivela che gli esperti battono ancora i modelli pi&ugrave; avanzati proprio dove la posta in gioco &egrave; pi&ugrave; alta. Per colmare il divario di affidabilit&agrave; propongo un framework di <strong>Genetic Improvement</strong> che ripara sistematicamente il codice generato dagli LLM, e una nuova metrica continua per il Text-to-SQL che coglie distinzioni invisibili ai punteggi binari. Sul versante della sostenibilit&agrave;, l'ottimizzazione multi-obiettivo scopre configurazioni di agenti di coding con un miglioramento dell'hypervolume <strong>superiore di oltre cento volte</strong>. Il risultato: una via verso un uso degli LLM non solo potente, ma affidabile e responsabile. Supervisori: Prof. Luca Manzoni, Prof. Andrea De Lorenzo.{{ else }}Large Language Models promise to reshape how we write code, query data, and access knowledge &mdash; but do they really deliver? This thesis probes that question across four fronts: how we evaluate LLMs, how they democratize expertise, how we make them reliable, and how we deploy them sustainably. A human-centered study on legal texts shows that domain experts still outperform state-of-the-art models precisely where the stakes are highest. To close the reliability gap, I introduce a <strong>Genetic Improvement</strong> framework that systematically repairs LLM-generated code, and a continuous Text-to-SQL metric that uncovers distinctions hidden by pass-or-fail scores. On sustainability, multi-objective optimization discovers coding-agent configurations with <strong>over a hundredfold hypervolume improvement</strong>. The result: a path to LLM deployment that is not only powerful, but trustworthy. Supervisors: Prof. Luca Manzoni, Prof. Andrea De Lorenzo.{{ end }}</div>
+      </div>
+    </div>
+
+    <!-- ===== 4. SELECTED PUBLICATIONS ===== -->
+    <h2 class="section-heading">{{ if eq site.Language.Lang "it" }}📄 Pubblicazioni Selezionate{{ else }}📄 Selected Publications{{ end }}</h2>
+    <ul class="pub-list">
+      <li class="pub-item">
+        <div class="pub-title">Redefining Text-to-SQL Metrics by Incorporating Semantic and Structural Similarity</div>
+        <div class="pub-authors"><strong>G. Pinna</strong>, Y. Perezhohin, L. Manzoni, M. Castelli, A. De Lorenzo</div>
+        <div class="pub-venue">Scientific Reports 15.1 (Nature), 2025</div>
+        <div class="pub-links">
+          <a href="https://doi.org/10.1038/s41598-025-85645-0" target="_blank">Paper</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">Comparing AI Coding Agents: A Task-Stratified Analysis of Pull Request Acceptance</div>
+        <div class="pub-authors"><strong>G. Pinna</strong>, J. Gong, D. Williams, F. Sarro</div>
+        <div class="pub-venue">arXiv:2602.08915, 2026</div>
+        <div class="pub-links">
+          <a href="https://arxiv.org/abs/2602.08915" target="_blank">arXiv</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">Analyzing Message-Code Inconsistency in AI Coding Agent-Authored Pull Requests</div>
+        <div class="pub-authors">J. Gong, <strong>G. Pinna</strong>, Y. Bian, J. M. Zhang</div>
+        <div class="pub-venue">arXiv:2601.04886, 2026</div>
+        <div class="pub-venue">🏆 Distinguished Mining Challenge Paper Award, MSR 2026</div>
+        <div class="pub-links">
+          <a href="https://arxiv.org/pdf/2601.04886" target="_blank">Paper</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">Enhancing Large Language Models-Based Code Generation by Leveraging Genetic Improvement</div>
+        <div class="pub-authors"><strong>G. Pinna</strong>, D. Ravalico, L. Rovito, L. Manzoni, A. De Lorenzo</div>
+        <div class="pub-venue">EuroGP 2024, Springer LNCS vol. 14631</div>
+        <div class="pub-links">
+          <a href="https://doi.org/10.1007/978-3-031-56957-9_7" target="_blank">Paper</a>
+        </div>
+      </li>
+      <li class="pub-item">
+        <div class="pub-title">An Artificial Intelligence System for Automatic Recognition of Punches in Fourteenth-Century Panel Painting</div>
+        <div class="pub-authors">M. Zullich, V. Macovaz, <strong>G. Pinna</strong>, F.A. Pellegrino</div>
+        <div class="pub-venue">IEEE Access, 2023</div>
+        <div class="pub-links">
+          <a href="https://doi.org/10.1109/ACCESS.2023.3276538" target="_blank">Paper</a>
+        </div>
+      </li>
+    </ul>
+
+    <!-- ===== 5. RECENT BLOG POSTS ===== -->
+    <h2 class="section-heading">{{ if eq site.Language.Lang "it" }}📝 Ultimi Articoli{{ else }}📝 Recent Posts{{ end }}</h2>
+    {{- $pages := where site.RegularPages "Section" "posts" }}
+    {{- range first 3 $pages }}
+    <article class="pub-item">
+      <div class="pub-title"><a href="{{ .Permalink }}">{{ .Title }}</a></div>
+      <div class="pub-authors">{{ .Date.Format "January 2, 2006" }} · {{ .ReadingTime }} min read</div>
+      <div class="pub-venue">{{ .Description }}</div>
+    </article>
+    {{- end }}
+
+    <!-- ===== 6. PROJECTS ===== -->
+    <h2 class="section-heading">{{ if eq site.Language.Lang "it" }}🚀 Progetti{{ else }}🚀 Projects{{ end }}</h2>
+    <div class="project-grid">
+      <a href="{{ "projects/influence/" | absURL }}" class="project-card" style="text-decoration:none; color:inherit;">
+        <div class="card-image">🤖</div>
+        <div class="card-body">
+          <h3>Influence</h3>
+          <p>{{ if eq site.Language.Lang "it" }}Piattaforma che combina marketing e AI per analizzare il pubblico e generare contenuti mirati per i social media.{{ else }}A platform combining marketing and AI to analyze audiences and generate targeted social media content.{{ end }}</p>
+        </div>
+        <div class="card-tags"><span>NLP</span><span>Machine Learning</span><span>Marketing</span></div>
+      </a>
+      <a href="#" class="project-card" style="text-decoration:none; color:inherit;">
+        <div class="card-image">🧬</div>
+        <div class="card-body">
+          <h3>GI for LLM Code</h3>
+          <p>{{ if eq site.Language.Lang "it" }}Pipeline di Genetic Improvement per correggere e migliorare automaticamente il codice SQL generato dai Large Language Models.{{ else }}Genetic Improvement pipeline to automatically correct and improve SQL code generated by Large Language Models.{{ end }}</p>
+        </div>
+        <div class="card-tags"><span>Genetic Improvement</span><span>LLM</span><span>Text-to-SQL</span></div>
+      </a>
+      <a href="#" class="project-card" style="text-decoration:none; color:inherit;">
+        <div class="card-image">📊</div>
+        <div class="card-body">
+          <h3>{{ if eq site.Language.Lang "it" }}Metrica Text-to-SQL{{ else }}Text-to-SQL Metric{{ end }}</h3>
+          <p>{{ if eq site.Language.Lang "it" }}Nuova metrica di valutazione che integra similarit&agrave; semantica e strutturale per sistemi Text-to-SQL. Pubblicata su Scientific Reports.{{ else }}Novel evaluation metric integrating semantic and structural similarity for Text-to-SQL systems. Published in Scientific Reports.{{ end }}</p>
+        </div>
+        <div class="card-tags"><span>Evaluation</span><span>NLP</span><span>SQL</span></div>
+      </a>
+      <a href="#" class="project-card" style="text-decoration:none; color:inherit;">
+        <div class="card-image">📰</div>
+        <div class="card-body">
+          <h3>{{ if eq site.Language.Lang "it" }}L'Edicola della Storia{{ else }}Historical Newspaper NLP{{ end }}</h3>
+          <p>{{ if eq site.Language.Lang "it" }}Pipeline NLP multilingue per l'analisi comparativa di giornali storici italiani e sloveni della Trieste del 1902.{{ else }}Multilingual NLP pipeline for comparative analysis of Italian and Slovenian historical newspapers from 1902 Trieste.{{ end }}</p>
+        </div>
+        <div class="card-tags"><span>Digital Humanities</span><span>BERTopic</span><span>Sentiment</span></div>
+      </a>
+    </div>
+
+    <!-- ===== 7. POPULAR TOPICS ===== -->
+    <h2 class="section-heading">{{ if eq site.Language.Lang "it" }}🏷️ Argomenti{{ else }}🏷️ Popular Topics{{ end }}</h2>
+    <div class="tag-cloud">
+      <a href="{{ "tags/ai/" | absURL }}">Artificial Intelligence</a>
+      <a href="{{ "tags/nlp/" | absURL }}">NLP</a>
+      <a href="{{ "tags/llm/" | absURL }}">Large Language Models</a>
+      <a href="{{ "tags/text-to-sql/" | absURL }}">Text-to-SQL</a>
+      <a href="{{ "tags/genetic-improvement/" | absURL }}">Genetic Improvement</a>
+      <a href="{{ "tags/machine-learning/" | absURL }}">Machine Learning</a>
+      <a href="{{ "tags/rag/" | absURL }}">RAG</a>
+      <a href="{{ "tags/python/" | absURL }}">Python</a>
+      <a href="{{ "tags/deep-learning/" | absURL }}">Deep Learning</a>
+      <a href="{{ "tags/pytorch/" | absURL }}">PyTorch</a>
+      <a href="{{ "tags/sentiment-analysis/" | absURL }}">Sentiment Analysis</a>
+      <a href="{{ "tags/ai-agents/" | absURL }}">AI Agents</a>
+      <a href="{{ "tags/evolutionary-computation/" | absURL }}">Evolutionary Computation</a>
+    </div>
+
+    <!-- ===== 8. SKILLS ===== -->
+    <h2 class="section-heading">{{ if eq site.Language.Lang "it" }}🛠️ Competenze{{ else }}🛠️ Skills{{ end }}</h2>
+    <div class="skills-grid">
+      <div class="skill-category">
+        <h4>{{ if eq site.Language.Lang "it" }}Linguaggi{{ else }}Languages{{ end }}</h4>
+        <ul><li>Python</li><li>SQL</li><li>Java</li><li>C++</li></ul>
+      </div>
+      <div class="skill-category">
+        <h4>ML &amp; NLP</h4>
+        <ul><li>PyTorch</li><li>HuggingFace</li><li>scikit-learn</li><li>spaCy / NLTK</li><li>BERTopic</li></ul>
+      </div>
+      <div class="skill-category">
+        <h4>LLM &amp; Agents</h4>
+        <ul><li>LangChain</li><li>LlamaIndex</li><li>LangGraph</li><li>RAG Pipelines</li><li>Prompt Engineering</li></ul>
+      </div>
+      <div class="skill-category">
+        <h4>{{ if eq site.Language.Lang "it" }}Strumenti{{ else }}Tools{{ end }}</h4>
+        <ul><li>Git / GitHub</li><li>Docker</li><li>Linux</li><li>LaTeX</li><li>Streamlit / Gradio</li></ul>
+      </div>
+    </div>
+
+  </div>
+</article>
+
+{{- end }}

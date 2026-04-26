@@ -1,0 +1,7 @@
+<div class="social-icons-row">
+  {{- range site.Params.socialIcons }}
+  <a href="{{ .url }}" target="_blank" rel="noopener noreferrer" title="{{ (.title | default .name) | title }}">
+    {{- partial "svg.html" . }}
+  </a>
+  {{- end }}
+</div>

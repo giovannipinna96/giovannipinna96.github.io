@@ -1,0 +1,177 @@
+baseURL: "https://giovannipinna96.github.io/new_site/"
+title: "Giovanni Pinna"
+theme: "PaperMod"
+pagination:
+  pagerSize: 5
+enableRobotsTXT: true
+buildDrafts: false
+buildFuture: false
+buildExpired: false
+enableEmoji: true
+defaultContentLanguage: "en"
+defaultContentLanguageInSubdir: false
+
+minify:
+  disableXML: true
+  minifyOutput: true
+
+languages:
+  en:
+    languageName: "English"
+    languageCode: "en"
+    weight: 1
+    contentDir: "content/en"
+    title: "Giovanni Pinna"
+    params:
+      description: "AI Researcher & Engineer | Ph.D. in Applied Data Science & AI"
+    menu:
+      main:
+        - identifier: home
+          name: Home
+          url: /
+          weight: 5
+        - identifier: about
+          name: About Me
+          url: /about/
+          weight: 10
+        - identifier: activities
+          name: Activities
+          url: /activities/
+          weight: 15
+        - identifier: publications
+          name: Publications
+          url: /publications/
+          weight: 20
+        - identifier: projects
+          name: Projects
+          url: /projects/
+          weight: 25
+        - identifier: blog
+          name: Blog
+          url: /posts/
+          weight: 30
+        - identifier: cv
+          name: CV
+          url: /cv/
+          weight: 35
+        - identifier: contact
+          name: Contact
+          url: /contact/
+          weight: 40
+
+  it:
+    languageName: "Italiano"
+    languageCode: "it"
+    weight: 2
+    contentDir: "content/it"
+    title: "Giovanni Pinna"
+    params:
+      description: "Ricercatore AI & Ingegnere | Ph.D. in Data Science & AI Applicata"
+    menu:
+      main:
+        - identifier: home
+          name: Home
+          url: /it/
+          weight: 5
+        - identifier: about
+          name: Chi Sono
+          url: /it/about/
+          weight: 10
+        - identifier: activities
+          name: Attività
+          url: /it/activities/
+          weight: 15
+        - identifier: publications
+          name: Pubblicazioni
+          url: /it/publications/
+          weight: 20
+        - identifier: projects
+          name: Progetti
+          url: /it/projects/
+          weight: 25
+        - identifier: blog
+          name: Blog
+          url: /it/posts/
+          weight: 30
+        - identifier: cv
+          name: CV
+          url: /it/cv/
+          weight: 35
+        - identifier: contact
+          name: Contatti
+          url: /it/contact/
+          weight: 40
+
+params:
+  env: production
+  author: "Giovanni Pinna"
+  description: "AI Researcher & Engineer | Ph.D. in Applied Data Science & AI"
+  keywords: ["Giovanni Pinna", "AI Researcher", "NLP", "LLM", "Text-to-SQL", "Genetic Improvement", "Data Science", "Machine Learning"]
+  DateFormat: "January 2, 2006"
+  defaultTheme: auto
+  disableThemeToggle: false
+
+  ShowReadingTime: true
+  ShowShareButtons: true
+  ShowPostNavLinks: true
+  ShowBreadCrumbs: false
+  ShowCodeCopyButtons: true
+  ShowWordCount: false
+  ShowRssButtonInSectionTermList: true
+  UseHugoToc: true
+  disableSpecial1stPost: false
+  disableScrollToTop: false
+  comments: false
+  hidemeta: false
+  hideSummary: false
+  showtoc: true
+  tocopen: false
+
+  profileMode:
+    enabled: false
+
+  socialIcons:
+    - name: github
+      url: "https://github.com/giovannipinna96"
+    - name: linkedin
+      url: "https://www.linkedin.com/in/giovanni-pinna/"
+    - name: email
+      url: "mailto:giovanni.pinna@phd.units.it"
+    - name: googlescholar
+      url: "https://scholar.google.com/citations?user=bf2RiOAAAAAJ&hl=en"
+    - name: youtube
+      url: "https://www.youtube.com/channel/UCiVRlONi_xbN0Qro6C22y-A"
+    - name: instagram
+      url: "https://www.instagram.com/pinna.giova/"
+
+  assets:
+    disableHLJS: false
+    disableFingerprinting: false
+    favicon: "/favicon.ico"
+
+  cover:
+    hidden: false
+    hiddenInList: false
+    hiddenInSingle: false
+
+  fuseOpts:
+    isCaseSensitive: false
+    shouldSort: true
+    location: 0
+    distance: 1000
+    threshold: 0.4
+    minMatchCharLength: 0
+    keys: ["title", "permalink", "summary", "content"]
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+  highlight:
+    noClasses: false
+
+outputs:
+  home:
+    - HTML
+    - RSS
+    - JSON

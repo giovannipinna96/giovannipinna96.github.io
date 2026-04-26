@@ -1,0 +1,193 @@
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            {{- $label_text := (site.Params.label.text | default site.Title) }}
+            {{- if site.Title }}
+            <a href="{{ "" | absLangURL }}" accesskey="h" title="{{ $label_text }} (Alt + H)">
+                {{- if site.Params.label.icon }}
+                {{- $img := resources.Get site.Params.label.icon }}
+                {{- if $img }}
+                    {{- $processableFormats := (slice "jpg" "jpeg" "png" "tif" "bmp" "gif") -}}
+                    {{- if hugo.IsExtended -}}
+                        {{- $processableFormats = $processableFormats | append "webp" -}}
+                    {{- end -}}
+                    {{- $prod := (hugo.IsProduction | or (eq site.Params.env "production")) }}
+                    {{- if and (in $processableFormats $img.MediaType.SubType) (eq $prod true)}}
+                        {{- if site.Params.label.iconHeight }}
+                            {{- $img = $img.Resize (printf "x%d" site.Params.label.iconHeight) }}
+                        {{ else }}
+                            {{- $img = $img.Resize "x30" }}
+                        {{- end }}
+                    {{- end }}
+                    <img src="{{ $img.Permalink }}" alt="" aria-label="logo"
+                        height="{{- site.Params.label.iconHeight | default "30" -}}">
+                {{- else }}
+                <img src="{{- site.Params.label.icon | absURL -}}" alt="" aria-label="logo"
+                    height="{{- site.Params.label.iconHeight | default "30" -}}">
+                {{- end -}}
+                {{- else if hasPrefix site.Params.label.iconSVG "<svg" }}
+                    {{ site.Params.label.iconSVG | safeHTML }}
+                {{- end -}}
+                {{- $label_text -}}
+            </a>
+            {{- end }}
+        </div>
+
+        <!-- Hamburger toggle (mobile only) -->
+        <button id="menu-toggle" class="menu-toggle" aria-label="Toggle menu">
+            <svg class="hamburger-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <svg class="close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        {{- $currentPage := . }}
+        <ul id="menu">
+            {{- range site.Menus.main }}
+            {{- $menu_item_url := (cond (strings.HasSuffix .URL "/") .URL (printf "%s/" .URL) ) | absLangURL }}
+            {{- $page_url:= $currentPage.Permalink | absLangURL }}
+            {{- $is_search := eq (site.GetPage .KeyName).Layout `search` }}
+            <li>
+                <a href="{{ .URL | absLangURL }}" title="{{ .Title | default .Name }} {{- cond $is_search (" (Alt + /)" | safeHTMLAttr) ("" | safeHTMLAttr ) }}"
+                {{- cond $is_search (" accesskey=/" | safeHTMLAttr) ("" | safeHTMLAttr ) }}>
+                    <span {{- if eq $menu_item_url $page_url }} class="active" {{- end }}>
+                        {{- .Pre }}
+                        {{- .Name -}}
+                        {{ .Post -}}
+                    </span>
+                    {{- if (findRE "://" .URL) }}&nbsp;
+                    <svg fill="none" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24" height="12" width="12">
+                        <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"></path>
+                        <path d="M15 3h6v6"></path>
+                        <path d="M10 14L21 3"></path>
+                    </svg>
+                    {{- end }}
+                </a>
+            </li>
+            {{- end }}
+
+            <!-- Search icon -->
+            <li class="nav-icon">
+                <a href="{{ "search/" | absLangURL }}" accesskey="/" title="Search (Alt + /)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span class="mobile-label">Search</span>
+                </a>
+            </li>
+
+            <!-- Theme toggle -->
+            {{- if (not site.Params.disableThemeToggle) }}
+            <li class="nav-icon">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <span class="mobile-label">Theme</span>
+                </button>
+            </li>
+            {{- end }}
+
+            <!-- Language switch dropdown -->
+            {{- if (not site.Params.disableLangToggle) }}
+            <li class="nav-icon lang-dropdown">
+                <button id="lang-toggle" aria-label="Change language" title="Change language">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 8l6 6"></path>
+                        <path d="M4 14l6-6 2-3"></path>
+                        <path d="M2 5h12"></path>
+                        <path d="M7 2h1"></path>
+                        <path d="M22 22l-5-10-5 10"></path>
+                        <path d="M14 18h6"></path>
+                    </svg>
+                    <span class="mobile-label">Language</span>
+                </button>
+                <ul class="lang-menu" id="lang-menu">
+                    {{- $lang := .Lang }}
+                    <!-- Current language -->
+                    <li class="lang-current">
+                        <span>{{ if eq $lang "en" }}English{{ else }}Italiano{{ end }}</span>
+                    </li>
+                    <!-- Other languages -->
+                    {{- with site.Home.Translations }}
+                    {{- range . -}}
+                    {{- if ne $lang .Lang }}
+                    <li>
+                        <a href="{{- .Permalink -}}">{{ .Language.LanguageName | default (.Lang | title) }}</a>
+                    </li>
+                    {{- end -}}
+                    {{- end }}
+                    {{- end }}
+                </ul>
+            </li>
+            {{- end }}
+        </ul>
+    </nav>
+</header>
+<script>
+(function() {
+    // Language dropdown
+    var langBtn = document.getElementById('lang-toggle');
+    var langMenu = document.getElementById('lang-menu');
+    if (langBtn && langMenu) {
+        langBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            langMenu.classList.toggle('show');
+        });
+    }
+
+    // Hamburger menu toggle
+    var menuToggle = document.getElementById('menu-toggle');
+    var menu = document.getElementById('menu');
+    if (menuToggle && menu) {
+        menuToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            menu.classList.toggle('menu-open');
+            menuToggle.classList.toggle('is-active');
+        });
+    }
+
+    // Close menus on outside click or Escape
+    document.addEventListener('click', function(e) {
+        if (langMenu && !langMenu.contains(e.target) && e.target !== langBtn) {
+            langMenu.classList.remove('show');
+        }
+        if (menu && menuToggle && !menu.contains(e.target) && !menuToggle.contains(e.target)) {
+            menu.classList.remove('menu-open');
+            menuToggle.classList.remove('is-active');
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (langMenu) langMenu.classList.remove('show');
+            if (menu) menu.classList.remove('menu-open');
+            if (menuToggle) menuToggle.classList.remove('is-active');
+        }
+    });
+})();
+</script>
