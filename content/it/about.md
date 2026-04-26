@@ -8,15 +8,15 @@ ShowBreadCrumbs: false
 
 <div class="about-hero">
   <div class="about-hero-img">
-    <img src="/new_site/images/profile.png" alt="Giovanni Pinna">
+    <img src="/images/profile.png" alt="Giovanni Pinna">
   </div>
   <div class="about-hero-text">
     <h1>Ciao, sono Giovanni <span class="wave">👋</span></h1>
     <p class="about-tagline">Ricercatore AI &middot; ML Engineer &middot; Ph.D.</p>
     <p>Sono un Ricercatore e Ingegnere AI di <strong>Trieste, Italia</strong>, con un Dottorato di Ricerca in Data Science & Intelligenza Artificiale Applicata. Il mio lavoro si colloca all'intersezione tra <strong>NLP</strong>, <strong>Large Language Models</strong> e <strong>Computazione Evolutiva</strong> &mdash; costruendo sistemi che migliorano e valutano il codice generato dall'AI.</p>
     <div class="about-cta">
-      <a href="/new_site/it/contact/" class="btn-primary">Contattami</a>
-      <a href="/new_site/it/cv/" class="btn-secondary">Vedi il mio CV</a>
+      <a href="/it/contact/" class="btn-primary">Contattami</a>
+      <a href="/it/cv/" class="btn-secondary">Vedi il mio CV</a>
     </div>
   </div>
 </div>

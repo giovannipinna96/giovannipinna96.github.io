@@ -8,15 +8,15 @@ ShowBreadCrumbs: false
 
 <div class="about-hero">
   <div class="about-hero-img">
-    <img src="/new_site/images/profile.png" alt="Giovanni Pinna">
+    <img src="/images/profile.png" alt="Giovanni Pinna">
   </div>
   <div class="about-hero-text">
     <h1>Hi, I'm Giovanni <span class="wave">👋</span></h1>
     <p class="about-tagline">AI Researcher &middot; ML Engineer &middot; Ph.D.</p>
     <p>I'm an AI Researcher and Engineer based in <strong>Trieste, Italy</strong>, with a Ph.D. in Applied Data Science & Artificial Intelligence. My work sits at the intersection of <strong>NLP</strong>, <strong>Large Language Models</strong>, and <strong>AI Agents</strong>, and <strong>Evolutionary Computation</strong> &mdash; building systems that improve and evaluate AI-generated code.</p>
     <div class="about-cta">
-      <a href="/new_site/contact/" class="btn-primary">Get in Touch</a>
-      <a href="/new_site/cv/" class="btn-secondary">View My CV</a>
+      <a href="/contact/" class="btn-primary">Get in Touch</a>
+      <a href="/cv/" class="btn-secondary">View My CV</a>
     </div>
   </div>
 </div>

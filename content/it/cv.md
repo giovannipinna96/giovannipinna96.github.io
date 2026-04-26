@@ -9,8 +9,8 @@ ShowBreadCrumbs: false
 <div class="cv-download-section">
   <p>Scarica una copia del mio CV:</p>
   <div class="cv-buttons">
-    <a href="/new_site/files/Giovanni_Pinna_CV_long.pdf" class="btn-primary" download>📄 Scarica CV Completo (PDF)</a>
-    <a href="/new_site/files/Giovanni_Pinna_CV_short.pdf" class="btn-secondary" download>📋 Scarica CV Breve (PDF)</a>
+    <a href="/files/Giovanni_Pinna_CV_long.pdf" class="btn-primary" download>📄 Scarica CV Completo (PDF)</a>
+    <a href="/files/Giovanni_Pinna_CV_short.pdf" class="btn-secondary" download>📋 Scarica CV Breve (PDF)</a>
   </div>
   <p class="cv-updated"><em>Ultimo aggiornamento: Aprile 2026</em></p>
 </div>
@@ -21,7 +21,7 @@ ShowBreadCrumbs: false
 
 <div class="cv-timeline">
   <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/ucl2.jpg" alt="UCL"></div>
+    <div class="cv-logo"><img src="/images/orgs/ucl2.jpg" alt="UCL"></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Visiting Researcher</div>
@@ -31,7 +31,7 @@ ShowBreadCrumbs: false
     </div>
   </div>
   <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/nova.png" alt="NOVA IMS"></div>
+    <div class="cv-logo"><img src="/images/orgs/nova.png" alt="NOVA IMS"></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Visiting Researcher</div>
@@ -41,7 +41,7 @@ ShowBreadCrumbs: false
     </div>
   </div>
   <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/units.jpg" alt="UniTS"></div>
+    <div class="cv-logo"><img src="/images/orgs/units.jpg" alt="UniTS"></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Teaching Assistant — Sistemi di Database</div>
@@ -51,7 +51,7 @@ ShowBreadCrumbs: false
     </div>
   </div>
   <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/nova.png" alt="NOVA IMS"></div>
+    <div class="cv-logo"><img src="/images/orgs/nova.png" alt="NOVA IMS"></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Visiting Researcher</div>
@@ -61,7 +61,7 @@ ShowBreadCrumbs: false
     </div>
   </div>
     <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/plus.jpg" alt="PLUS S.r.l."></div>
+    <div class="cv-logo"><img src="/images/orgs/plus.jpg" alt="PLUS S.r.l."></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Applied AI Scientist</div>
@@ -71,7 +71,7 @@ ShowBreadCrumbs: false
     </div>
   </div>
   <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/units.jpg" alt="UniTS"></div>
+    <div class="cv-logo"><img src="/images/orgs/units.jpg" alt="UniTS"></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Tutor Dipartimentale — Data Science &amp; AI</div>
@@ -86,7 +86,7 @@ ShowBreadCrumbs: false
 
 <div class="cv-timeline">
   <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/units.jpg" alt="UniTS"></div>
+    <div class="cv-logo"><img src="/images/orgs/units.jpg" alt="UniTS"></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Dottorato di Ricerca in Data Science &amp; Intelligenza Artificiale Applicata</div>
@@ -96,7 +96,7 @@ ShowBreadCrumbs: false
     </div>
   </div>
   <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/units.jpg" alt="UniTS"></div>
+    <div class="cv-logo"><img src="/images/orgs/units.jpg" alt="UniTS"></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Laurea Magistrale in Ingegneria Informatica</div>
@@ -106,7 +106,7 @@ ShowBreadCrumbs: false
     </div>
   </div>
   <div class="cv-entry">
-    <div class="cv-logo"><img src="/new_site/images/orgs/units.jpg" alt="UniTS"></div>
+    <div class="cv-logo"><img src="/images/orgs/units.jpg" alt="UniTS"></div>
     <div class="cv-dot"></div>
     <div class="cv-card">
       <div class="cv-title">Laurea Triennale in Ingegneria Elettronica e Informatica</div>
