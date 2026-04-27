@@ -1646,12 +1646,12 @@ a {
     left: 10px;
   }
 
-  /* Keep institution logos visible on mobile, but pin them in the top-right
-     of the card so they don't fight with the timeline gutter on small screens. */
+  /* Keep institution logos visible on mobile, pinned in the top-LEFT
+     of the card. */
   .cv-logo {
     position: absolute;
-    left: auto;
-    right: 12px;
+    right: auto;
+    left: 12px;
     top: 12px;
     width: 40px;
     height: 40px;
@@ -1670,8 +1670,8 @@ a {
 
   .cv-card {
     margin-left: 4px;
-    /* Reserve space so the title doesn't overlap the floating logo */
-    padding-right: 64px;
+    /* Reserve space on the LEFT so title/text don't overlap the logo */
+    padding-left: 64px;
   }
 
   .cv-skills-grid {
