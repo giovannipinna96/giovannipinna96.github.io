@@ -1,18 +1,7 @@
 {{- /*
   Override of PaperMod's share_icons.html.
-  Instead of social-share intents (X, LinkedIn, Reddit, Facebook, WhatsApp,
-  Telegram, Y Combinator), we render the same profile socials shown in the
-  site footer: X, LinkedIn, GitHub, Instagram, Email.
+  Renders the SAME socials shown under Giovanni's profile photo on the
+  homepage (X, LinkedIn, GitHub, Instagram, Email), reusing the existing
+  social-icons.html partial so styling matches exactly.
 */ -}}
-<ul class="share-buttons share-buttons--profile">
-  {{- range site.Params.socialIcons }}
-  <li>
-    <a href="{{ trim .url " " | safeURL }}"
-       {{- if not (hasPrefix .url "mailto:") }} target="_blank" rel="noopener noreferrer me"{{ end }}
-       aria-label="{{ (.title | default .name) | title }}"
-       title="{{ (.title | default .name) | title }}">
-      {{ partial "svg.html" . }}
-    </a>
-  </li>
-  {{- end }}
-</ul>
+{{- partial "social-icons.html" . }}
