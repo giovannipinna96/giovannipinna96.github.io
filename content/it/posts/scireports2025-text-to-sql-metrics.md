@@ -1,111 +1,110 @@
 ---
-title: "Ridefinire le Metriche Text-to-SQL: Oltre la Valutazione Binaria"
+title: "Il campo del Text-to-SQL ha un problema di misurazione"
 date: 2025-07-02
 draft: false
 tags: ["Text-to-SQL", "Metriche di Valutazione", "Similarità Semantica", "SQL", "LLM"]
 categories: ["Ricerca"]
-description: "Presentazione del Query Accuracy Score (QAS), una metrica di valutazione continua per sistemi text-to-SQL che cattura l'intero spettro tra 'perfettamente corretto' e 'completamente sbagliato' combinando similarità semantica e strutturale."
+description: "Tutti i benchmark text-to-SQL di oggi valutano le query come perfette o sbagliate. È un lancio di moneta vestito da metrica. Ne abbiamo costruita una che ti dice davvero quanto ti sei avvicinato."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/scireports2025-text-to-sql-metrics/Figure2.png"
+  alt: "QAS — Query Accuracy Score che combina similarità semantica e di tabella"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-Le metriche di valutazione dominanti per i sistemi text-to-SQL — Exact Match e Execution Accuracy — sono entrambe binarie, valutando ogni query generata come completamente corretta o completamente sbagliata. Questo cancella distinzioni critiche tra query quasi corrette e quelle fondamentalmente errate. Introduciamo il Query Accuracy Score (QAS), una metrica continua che combina la similarità semantica (usando embedding di codice UAE-Code-Large-V1 e distanza coseno) con la similarità delle tabelle (usando il confronto basato sulla distanza di edit delle tabelle risultanti). Valutato su 11 modelli text-to-SQL attraverso il benchmark BIRD, il QAS rivela differenze di qualità nascoste invisibili alle metriche binarie: modelli con execution accuracy simile presentano profili di errore sorprendentemente diversi. La struttura a due componenti abilita inoltre la diagnosi differenziale — distinguendo tra fallimenti di intento (struttura della query sbagliata) e fallimenti di esecuzione (struttura corretta, valori sbagliati). Pubblicato su Scientific Reports, 2025.
+{{< summary-box title="TL;DR" >}}
+Il text-to-SQL è ovunque, ma lo misuriamo male. **Exact Match** ti penalizza se scrivi `users AS u`. **Execution Accuracy** non si interessa se hai azzeccato 99 righe su 100 — sbagliato è sbagliato. Abbiamo costruito **QAS (Query Accuracy Score)**: un punteggio continuo che combina similarità semantica code-aware (quanto è vicino il SQL?) con similarità di tabella basata su edit-distance (quanto è vicina la risposta?). Testato su 11 modelli su BIRD, QAS rivela differenze *enormi* che le metriche binarie schiacciano nello stesso numero.
 {{< /summary-box >}}
 
-## Introduzione
+## Un campo costruito su lanci di moneta
 
-Il Text-to-SQL — il compito di tradurre automaticamente domande in linguaggio naturale in query SQL per database — ha visto enormi progressi grazie ai Large Language Models. Sistemi costruiti su GPT-4, modelli specializzati fine-tuned e varie alternative open-source possono ora gestire query sempre più complesse attraverso schemi di database diversificati. La promessa è trasformativa: permettere a chiunque di interrogare database senza competenze SQL.
+Il text-to-SQL è una di quelle aree dove le demo sembrano magiche. Scrivi una domanda in italiano, ottieni una query SQL, ottieni una risposta dal tuo database. Niente DBA. La promessa è enorme.
 
-Ma il progresso in qualsiasi campo è affidabile solo quanto le metriche utilizzate per misurarlo. E il campo del text-to-SQL ha un problema di misurazione. Le due metriche di valutazione dominanti — **Exact Match (EM)** e **Execution Accuracy (EX)** — sono entrambe binarie: assegnano a ogni query generata un punteggio di completamente corretta (1) o completamente sbagliata (0). Questa natura binaria crea un sostanziale punto cieco che può fuorviare sia ricercatori che professionisti.
+Il progresso è reale. La *misurazione* del progresso non lo è.
 
-Questo articolo, pubblicato su **Scientific Reports (2025)**, introduce il **Query Accuracy Score (QAS)** — una metrica continua che cattura il ricco spettro tra correttezza perfetta e fallimento totale, consentendo una valutazione più sfumata e un confronto tra modelli più informato.
+Guarda una qualunque leaderboard text-to-SQL e vedrai due metriche che fanno tutto il lavoro: **Exact Match** e **Execution Accuracy**. Entrambe binarie. Una query è corretta o non lo è. Non c'è una via di mezzo.
 
-## Il Problema delle Metriche Binarie
+Questo è un problema. La maggior parte delle query che "falliscono" non è davvero spazzatura casuale — sono giuste all'80%, con un filtro sbagliato, una colonna mancante, una riga in più. Trattarle come identiche a "query completamente sbagliata sulla tabella sbagliata" butta via esattamente l'informazione che ci serve per migliorare i modelli.
 
-### Exact Match: Troppo Restrittivo
+## Perché Exact Match è una pessima battuta
 
-L'Exact Match confronta la stringa SQL generata carattere per carattere con una query di riferimento. Se sono testualmente identiche, il punteggio è 1; altrimenti, 0. Il problema fondamentale è che SQL è un linguaggio dichiarativo con ampia flessibilità sintattica. Consideriamo queste due query:
+Exact Match confronta due stringhe SQL carattere per carattere. Stringa uguale, score 1. Stringa diversa, score 0.
 
 ```sql
--- Query A
+-- Reference
 SELECT name FROM users WHERE age > 25
 
--- Query B
+-- Generato
 SELECT u.name FROM users AS u WHERE u.age > 25
 ```
 
-Queste query sono semanticamente identiche — restituiscono esattamente gli stessi risultati su qualsiasi database. Ma l'Exact Match valuta la Query B come fallimento se la Query A è il riferimento. Alias di tabella, ordine dei JOIN, riordinamento delle clausole, riformulazioni subquery-versus-JOIN — tutti questi producono query funzionalmente equivalenti che EM tratta come errate.
+Restituiscono risultati identici su ogni riga di ogni database dell'universo. Exact Match valuta la seconda come fallimento totale.
 
-### Execution Accuracy: Troppo Grossolana
+SQL è un linguaggio *dichiarativo*. Ci sono dozzine di modi validi per scrivere la stessa query. Alias, ordine delle JOIN, subquery contro JOIN, WHERE contro HAVING — tutta flessibilità sintattica, tutto semanticamente equivalente, tutto silurato da una metrica che confronta stringhe.
 
-L'Execution Accuracy migliora l'EM eseguendo effettivamente entrambe le query e confrontando le tabelle risultanti. Se gli output corrispondono, il punteggio è 1; altrimenti, 0. Questo gestisce elegantemente la variazione sintattica, ma introduce un problema diverso: **nessun credito parziale**.
+## Perché Execution Accuracy è meglio ma comunque sbagliata
 
-Una query che restituisce 99 su 100 righe corrette riceve lo stesso punteggio (0) di una che restituisce dati completamente irrilevanti. Una query che seleziona le colonne giuste dalle tabelle giuste ma con una condizione di filtro leggermente sbagliata è trattata identicamente a una che interroga tabelle completamente diverse. Queste distinzioni sono critiche per comprendere le capacità dei modelli e guidare i miglioramenti, eppure l'execution accuracy binaria le cancella completamente.
+Execution Accuracy almeno esegue le due query e confronta le tabelle dei risultati. Se le righe combaciano, score 1. Altrimenti, 0.
 
-### L'Impatto Pratico
+Risolve elegantemente il problema degli alias. E ne crea uno diverso: **niente credito parziale**.
 
-Per i ricercatori, le metriche binarie rendono impossibile distinguere tra modelli "quasi arrivati" e modelli fondamentalmente fuori strada. Due modelli con il 70% di execution accuracy potrebbero avere profili di errore molto diversi — uno che commette consistentemente piccoli errori, l'altro che alterna output perfetti e fallimenti completi. Le metriche binarie non possono distinguere questi casi.
+Una query che restituisce 99 righe corrette su 100 prende zero. Una query che seleziona le colonne giuste dalle tabelle giuste ma con un filtro leggermente sbagliato prende zero. Una query contro tabelle completamente sbagliate — anch'essa zero.
 
-Per i professionisti che valutano la prontezza per il deployment, la differenza tra "di solito vicino al corretto" e "o perfetto o inutile" è enorme — ma invisibile sotto le metriche attuali.
+Non sono lo stesso tipo di fallimento. Trattarli come uno solo distrugge segnale di cui ricercatori e professionisti hanno disperato bisogno.
 
-## Il Query Accuracy Score (QAS)
+## QAS: un punteggio continuo con due occhi
 
-Il QAS fornisce un valore continuo tra 0 e 1 combinando due misure di similarità complementari:
+Abbiamo costruito **QAS — il Query Accuracy Score** — per sistemare la cosa. È un numero tra 0 e 1, e ha due componenti che misurano cose diverse:
 
-### Similarità Semantica (S_C)
+![Pipeline QAS: similarità semantica incontra similarità di tabella](/images/scireports2025-text-to-sql-metrics/Figure2.png)
 
-Misuriamo la similarità strutturale tra query generate e di riferimento usando **modelli di embedding specializzati per il codice**. In particolare, impieghiamo **UAE-Code-Large-V1**, un modello addestrato per produrre rappresentazioni vettoriali significative del codice, incluso SQL.
+**S_C — Similarità Semantica.** Quanto sono vicine le *query stesse*? Embeddiamo entrambe le query con **UAE-Code-Large-V1**, un modello addestrato specificamente sul codice. Gli embedding di testo general-purpose non capiscono il SQL — non sanno che LEFT JOIN e RIGHT JOIN non sono sinonimi, o che le subquery possono essere funzionalmente identiche alle JOIN. Gli embedding code-specialized sì. Prendiamo la cosine similarity tra gli embedding. Quella è S_C.
 
-La scelta progettuale chiave è l'uso di embedding specifici per il codice anziché di uso generale. I modelli linguistici standard non comprendono pienamente i costrutti specifici di SQL: l'equivalenza funzionale di diverse sintassi JOIN, il ruolo semantico delle clausole WHERE rispetto alle clausole HAVING, o il significato dell'annidamento di subquery. Gli embedding specializzati per il codice catturano queste sfumature, producendo punteggi di similarità che correlano con l'effettiva similarità funzionale.
+**S_T — Similarità di Tabella.** Quanto sono vicini i *risultati*? Eseguiamo entrambe le query e confrontiamo le tabelle risultanti con edit distance — il numero minimo di inserimenti, cancellazioni e sostituzioni per trasformare una tabella nell'altra, normalizzato per dimensione. Sbagliata di una riga? S_T alto. Sbagliata su ogni valore? S_T basso.
 
-La similarità coseno tra i vettori di embedding delle query generate e di riferimento ci fornisce S_C — una misura di quanto le due query siano simili in termini di intento strutturale.
+Il punteggio finale è semplicemente:
 
-### Similarità delle Tabelle (S_T)
+> QAS = w · S_T + (1 − w) · S_C
 
-Mentre la similarità semantica cattura l'intento, la similarità delle tabelle cattura i risultati. Eseguiamo entrambe le query sul database e confrontiamo le tabelle risultanti usando un **algoritmo basato sulla distanza di edit**.
+Abbiamo testato quanto sia sensibile il ranking a *w* usando la distanza di Kendall e la risposta è: poco. I ranking sono stabili per w ∈ [0.25, 0.75]. Abbiamo scelto **w = 0.5** perché volevamo che intento e risultato pesassero ugualmente.
 
-Questo va ben oltre il confronto binario. L'algoritmo calcola il numero minimo di operazioni di modifica (inserimenti, cancellazioni, sostituzioni) necessarie per trasformare una tabella risultante nell'altra, normalizzato per la dimensione della tabella. Una tabella a cui manca una riga ottiene un alto punteggio di similarità; una tabella con dati completamente diversi ottiene un punteggio basso.
+Un sotto-risultato piccolo ma importante: proxy semplici come "le tabelle dei risultati hanno lo stesso numero di righe?" non funzionano. Abbiamo misurato la correlazione tra similarità di forma e similarità di contenuto effettivo ed era essenzialmente zero. **Due tabelle con forma identica possono contenere dati completamente diversi.** L'edit distance sul contenuto effettivo è necessario.
 
-Abbiamo anche dimostrato che semplici proxy strutturali — come confrontare il numero di righe o colonne — non sono affidabili. La nostra analisi ha mostrato essenzialmente **nessuna correlazione tra differenze nelle dimensioni delle tabelle e l'effettiva similarità del contenuto**. Tabelle con forme identiche possono contenere dati completamente diversi, confermando la necessità di un confronto a livello di contenuto.
+## Cosa mostra QAS che le metriche binarie nascondono
 
-### Combinare le Componenti
+Abbiamo applicato QAS a 11 modelli text-to-SQL sul benchmark BIRD — specialisti fine-tuned, sistemi general-purpose tipo GPT-4, modelli open-source di varie dimensioni.
 
-Il QAS finale è una combinazione pesata:
+Due risultati spiccano.
 
-> QAS = w × S_T + (1 − w) × S_C
+**Differenze nascoste tra modelli "equivalenti".** Due modelli con la stessa Execution Accuracy del ~65% possono avere *forme* di fallimento completamente diverse. Uno era un mediocre affidabile — sempre vicino, raramente perfetto. L'altro era bipolare — perfetto o catastrofico, niente in mezzo. Le metriche binarie li chiamano "lo stesso modello". Non lo sono.
 
-Abbiamo analizzato la sensibilità del parametro di peso w usando la **distanza di Kendall** tra le classifiche dei modelli a diverse impostazioni. Le classifiche erano stabili attraverso valori intermedi (w = 0.25, 0.5, 0.75), indicando che il QAS è robusto alla specifica scelta del peso. Abbiamo selezionato **w = 0.5** per pesare equamente entrambe le componenti.
+**Capacità diagnostica.** Le due componenti di QAS funzionano come un piccolo kit diagnostico:
 
-## Valutazione Sperimentale
+- **S_C alto, S_T basso** → il modello ha capito la query ma ha sbagliato i valori (filtro sbagliato, condizione mancante). Parla SQL, ma non sa fare i conti.
+- **S_C basso, S_T alto** → query strutturalmente diversa, output simile. O una riformulazione intelligente o un match accidentale.
+- **S_C basso, S_T basso** → il modello non ha capito la domanda.
 
-Abbiamo valutato il QAS sul **benchmark BIRD**, un dataset impegnativo di query per database del mondo reale attraverso domini diversi. Abbiamo valutato **11 modelli text-to-SQL**, includendo:
+Quella distinzione conta. Il primo caso si sistema con grounding migliore sul contenuto del database. Il terzo serve comprensione migliore dell'intento. Le metriche binarie non ti danno nessuna delle due — solo "sbagliato".
 
-- Modelli specialistici fine-tuned progettati specificamente per il text-to-SQL
-- LLM general-purpose (GPT-4 e varianti)
-- Varie alternative open-source di diverse dimensioni
+## Cosa abilita
 
-### Risultati Chiave
+Per i ricercatori: smettete di riportare un numero solo. Riportate una *distribuzione*. Mostrare che il vostro modello ha QAS medio più alto sui fallimenti rispetto alla baseline è un'affermazione significativa, anche quando l'accuratezza binaria è identica.
 
-**Distinzioni nascoste rivelate.** Modelli che apparivano equivalenti sotto metriche binarie mostravano differenze significative sotto QAS. Due modelli con punteggi EX simili intorno al 65% risultavano avere profili di errore sorprendentemente diversi: uno produceva query consistentemente mediocri (punteggi QAS moderati su tutta la linea), mentre l'altro era più "tutto-o-niente" (QAS alto sui successi, QAS molto basso sui fallimenti).
+Per i professionisti: un modello accurato al 70% con QAS medio alto sui fallimenti è *molto diverso* da un modello accurato al 70% con QAS medio basso sui fallimenti. Il primo è "vicino la maggior parte delle volte, deploya con cautela". Il secondo è "successo binario, prepara il fallback". Le decisioni di deployment dipendono da questo.
 
-**Capacità diagnostica.** La struttura a due componenti del QAS abilita la diagnosi differenziale:
-- **Alto S_C, basso S_T**: Il modello comprende l'intento della query ma commette errori a livello di esecuzione (valori di filtro sbagliati, condizioni mancanti).
-- **Basso S_C, alto S_T**: Query strutturalmente diverse che per caso producono risultati simili.
-- **Basso S_C, basso S_T**: Incomprensione fondamentale dei requisiti della query.
+Per il training: QAS è continuo e differenziabile in spirito. Potrebbe essere usato come segnale di reward più ricco rispetto ai segnali pass/fail su cui i modelli si allenano oggi. Non dobbiamo accontentarci della supervisione binaria quando finalmente la nostra metrica di valutazione ha trama.
 
-Questa informazione diagnostica è inestimabile per il miglioramento mirato dei modelli — una capacità che le metriche binarie semplicemente non possono fornire.
-
-**Classifiche stabili.** Le classifiche dei modelli prodotte dal QAS erano consistenti attraverso diverse configurazioni di peso, suggerendo che la metrica cattura differenze di qualità sottostanti robuste.
-
-## Implicazioni Più Ampie
-
-Per la comunità di ricerca, il QAS abilita un benchmarking più informativo. Invece di riportare un singolo numero di accuratezza binaria, i ricercatori possono caratterizzare la distribuzione completa della qualità delle query, permettendo confronti tra modelli più sfumati e miglioramenti architetturali più mirati.
-
-Per i professionisti, il QAS fornisce una valutazione più onesta delle capacità dei modelli. Un sistema con 70% di accuratezza binaria e alto QAS medio sui fallimenti è fondamentalmente diverso da uno con 70% di accuratezza e basso QAS medio sui fallimenti — e le decisioni di deployment dovrebbero riflettere questa differenza.
-
-Guardando al futuro, il QAS potrebbe potenzialmente servire come **obiettivo di addestramento**, fornendo feedback continuo e differenziabile durante il training del modello anziché segnali binari passa/fallisce. Questo potrebbe cambiare radicalmente il modo in cui i modelli text-to-SQL apprendono, abilitando un'ottimizzazione basata sul gradiente verso la qualità delle query invece di affidarsi esclusivamente alla supervisione binaria.
+Il TL;DR è semplice. **Non puoi ottimizzare quello che non vedi.** Le metriche binarie non vedono il gradiente di "quasi giusto". QAS sì.
 
 ---
 
-*Pubblicato su Scientific Reports, 15.1: 22357, 2025. Questa ricerca è stata condotta presso l'Università degli Studi di Trieste e la NOVA Information Management School (NOVA IMS), Universidade Nova de Lisboa. Codice disponibile su [github.com/giovannipinna96/sql_metric](https://github.com/giovannipinna96/sql_metric).*
+### Reference
+
+Questo post è una sintesi divulgativa di:
+
+> Pinna, G., Manzoni, L., De Lorenzo, A., Castelli, M. (2025). *Beyond Exact Set and Execution Matches: Redefining Text-to-SQL Metrics with Semantic and Structural Similarity*. **Scientific Reports**, 15(1): 22357.
+>
+> [Leggi il paper originale (PDF)](/images/scireports2025-text-to-sql-metrics/2025_Scientific_Reports_Beyond_Exact_Set_and_Execution_Matches__Redefining_Text_to_SQL_Metrics_with_Semantic_and_Structural_Similarity.pdf) — [Codice su GitHub](https://github.com/giovannipinna96/sql_metric)
+
+*Ricerca condotta presso l'Università degli Studi di Trieste e la NOVA Information Management School (NOVA IMS), Universidade Nova de Lisboa.*

@@ -131,18 +131,16 @@ params:
     enabled: false
 
   socialIcons:
-    - name: github
-      url: "https://github.com/giovannipinna96"
+    - name: x
+      url: "https://x.com/giovannipinna96"
     - name: linkedin
       url: "https://www.linkedin.com/in/giovanni-pinna/"
-    - name: email
-      url: "mailto:giovanni.pinna@phd.units.it"
-    - name: googlescholar
-      url: "https://scholar.google.com/citations?user=bf2RiOAAAAAJ&hl=en"
-    - name: youtube
-      url: "https://www.youtube.com/channel/UCiVRlONi_xbN0Qro6C22y-A"
+    - name: github
+      url: "https://github.com/giovannipinna96"
     - name: instagram
       url: "https://www.instagram.com/pinna.giova/"
+    - name: email
+      url: "mailto:giovanni.pinna@phd.units.it"
 
   assets:
     disableHLJS: false

@@ -1,95 +1,106 @@
 ---
-title: "Dai Tribunali alla Comprensione: Gli LLM Possono Rendere le Sentenze Più Accessibili?"
+title: "GPT-4 può rendere le sentenze più leggibili. Può anche raccontartele in modo sbagliato, con sicurezza."
 date: 2024-12-10
 draft: false
 tags: ["LLM", "NLP Giuridico", "Riassunto Testuale", "Fine-Tuning", "Accessibilità"]
 categories: ["Ricerca"]
-description: "Uno studio di valutazione umana che esamina se i riassunti generati dagli LLM delle sentenze della Corte Costituzionale italiana possono eguagliare la comprensibilità delle massime scritte da esperti."
+description: "Abbiamo chiesto a 75 persone di leggere riassunti di sentenze della Corte Costituzionale italiana — scritti da esperti, da GPT-4o, da un LLaMA fine-tuned, e le sentenze grezze stesse. I risultati dicono più sugli LLM che sui tribunali."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/wiat2024-courts-to-comprehension/percentuale_delle_risposte_corrette_per_titolo_di_studio.png"
+  alt: "Tassi di comprensione tra tipi di testo e titolo di studio"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-Le sentenze giuridiche sono in gran parte inaccessibili ai non esperti a causa del linguaggio complesso e dei riferimenti legali impliciti. In questo studio indaghiamo se i riassunti generati dagli LLM delle decisioni della Corte Costituzionale italiana possano eguagliare la comprensibilità delle massime scritte da esperti. In uno studio di valutazione umana con 75 partecipanti (25% con background giuridico, 75% senza), abbiamo confrontato quattro tipi di testo: sentenze originali, massime degli esperti, riassunti di GPT-4o e riassunti di LLaMA 2 fine-tuned (addestrato su 10.000 coppie sentenza-massima). Le massime degli esperti hanno ottenuto il punteggio più alto di comprensione (45%), seguite dai riassunti di GPT-4o (38%), dalle sentenze originali (33%) e da LLaMA 2 fine-tuned (30%). Tuttavia, GPT-4o ha mostrato un preoccupante problema di "errori sicuri" — producendo riassunti fluenti ma imprecisi che davano ai lettori falsa sicurezza nella propria comprensione, un problema particolarmente grave nel dominio giuridico. Pubblicato a IEEE WI-IAT 2024.
+{{< summary-box title="TL;DR" >}}
+Le sentenze della Corte Costituzionale italiana sono scritte per gli avvocati. La maggior parte dei cittadini non riesce a seguirle. Un LLM può sistemare la cosa? Abbiamo condotto uno studio umano con 75 persone confrontando quattro versioni dello stesso contenuto giuridico: sentenze originali, massime di esperti, riassunti di GPT-4o, e un LLaMA 2 7B fine-tuned. Tassi di comprensione: **massime di esperti 45%**, **GPT-4o 38%**, **sentenze grezze 33%**, **LLaMA fine-tuned 30%**. GPT-4o rende davvero più leggibile il testo giuridico. Produce anche un pattern preoccupante: **sicuro, fluente, sbagliato** — i lettori se ne vanno con comprensioni errate ma fortemente possedute. Usa gli LLM per il riassunto giuridico. Non usarli senza supervisione umana.
 {{< /summary-box >}}
 
-## Introduzione
+## Un problema democratico travestito da problema tecnico
 
-Il linguaggio giuridico è notoriamente difficile da comprendere. Le sentenze dei tribunali, in particolare, sono scritte da e per professionisti del diritto, impiegando vocabolario specializzato, strutture sintattiche complesse e riferimenti impliciti a dottrine legali che le rendono in gran parte opache ai non esperti. Questo crea una significativa barriera di accessibilità: i cittadini le cui vite sono influenzate dalle decisioni giudiziarie spesso non possono comprendere il ragionamento alla base di tali decisioni.
+Le sentenze della Corte Costituzionale sono tra i documenti più importanti che un paese produce. Definiscono cosa il tuo governo può e non può fare. Modellano quali sono i tuoi diritti. Sono anche scritte da giuristi, per giuristi, in una densa prosa giuridica italiana che il cittadino medio non ha alcuna possibilità di comprendere.
 
-Nel sistema giuridico italiano, la Corte Costituzionale pubblica due tipi di documenti per ogni decisione: la sentenza completa (*sentenza*), che contiene il ragionamento giuridico integrale, e un riassunto condensato chiamato *massima* (plurale: *massime*), scritto da esperti giuridici per catturare le conclusioni chiave e la motivazione. Le massime sono progettate per essere più accessibili delle sentenze complete, ma richiedono comunque una considerevole alfabetizzazione giuridica per essere comprese.
+La Corte Costituzionale italiana cerca già di risolvere la cosa. Per ogni sentenza pubblica una *massima* — un riassunto condensato scritto da esperti giuridici il cui mestiere intero è rendere accessibile la giurisprudenza. Le massime sono meglio delle sentenze complete, ma assumono comunque un'alfabetizzazione giuridica che la maggior parte delle persone non ha.
 
-Questo pone una domanda avvincente: **i Large Language Models possono generare riassunti delle sentenze che siano comprensibili ai non esperti quanto le massime scritte da esperti — o anche di più?**
+Quindi la domanda è semplice: **un LLM può aiutare a chiudere il divario?** Non sostituendo i giudici o gli esperti giuridici, ma producendo riassunti che un cittadino normale possa davvero leggere?
 
-Questo articolo, pubblicato a **IEEE WI-IAT 2024** (la 23ª Conferenza Internazionale IEEE/WIC su Web Intelligence e Intelligent Agent Technology), affronta questa domanda attraverso un rigoroso studio di valutazione umana.
+Abbiamo fatto l'esperimento.
 
-## Progettazione dello Studio
+## Cosa abbiamo testato
 
-### I Quattro Tipi di Testo
+Quattro versioni dello stesso contenuto giuridico:
 
-Abbiamo confrontato quattro diverse versioni dello stesso contenuto giuridico:
+1. **Sentenze originali** — il testo grezzo dalla Corte.
+2. **Massime di esperti** — i riassunti scritti da umani, il nostro tetto di qualità.
+3. **Riassunti di GPT-4o** — generati promptando GPT-4o di OpenAI su ciascuna sentenza.
+4. **LLaMA 2 7B fine-tuned** — un modello open-source più piccolo addestrato su **10.000 coppie sentenza-massima** estratte dagli archivi della Corte.
 
-1. **Sentenze originali** (*sentenze*): Il testo completo così come pubblicato dalla Corte Costituzionale
-2. **Massime degli esperti**: Riassunti scritti da professionisti del diritto
-3. **Riassunti di GPT-4o**: Generati chiedendo al modello GPT-4o di OpenAI di riassumere le sentenze originali
-4. **Riassunti di LLaMA 2 fine-tuned**: Generati da un modello LLaMA 2 7B specializzato specificamente su testo giuridico italiano
+Abbiamo provato anche Gemma 2B/7B e LLaMantino 7B (un LLaMA italianizzato) nella pipeline di fine-tuning; LLaMA 2 7B è risultato il migliore, quindi rappresenta il lato open-source nello studio umano.
 
-### Processo di Fine-Tuning
+## Come abbiamo misurato la comprensione
 
-Il modello fine-tuned è stato addestrato su un corpus di **10.000 coppie sentenza-massima** dagli archivi della Corte Costituzionale. Questo dataset ha fornito al modello ampi esempi di come gli esperti legali distillano sentenze complesse in riassunti concisi. Abbiamo anche valutato modelli aggiuntivi nella pipeline di fine-tuning, tra cui **Gemma 2B e 7B** e **LLaMantino 7B** (una variante di LLaMA specializzata per l'italiano), selezionando infine il modello con le migliori prestazioni per la valutazione umana.
+75 partecipanti. Circa il **25% con conoscenza giuridica** (studenti di legge, professionisti), il **75% senza** (pubblico generale). Ogni persona ha letto riassunti su tutti i tipi di testo e ha risposto a domande di comprensione sul contenuto effettivo.
 
-### Protocollo di Valutazione Umana
+L'abbiamo eseguito come disegno between-subjects — ogni caso sottostante è stato visto da ciascun partecipante in uno solo dei quattro formati — per eliminare effetti di apprendimento. Le differenze tra formati sono state testate con il chi-quadro.
 
-Abbiamo reclutato **75 partecipanti** per lo studio, divisi in due gruppi in base alle loro conoscenze giuridiche:
+![Comprensione per titolo di studio sui vari tipi di testo](/images/wiat2024-courts-to-comprehension/percentuale_delle_risposte_corrette_per_titolo_di_studio.png)
 
-- **25% con conoscenze giuridiche** (studenti di giurisprudenza, professionisti legali)
-- **75% senza conoscenze giuridiche** (pubblico generale)
+## Cosa abbiamo trovato
 
-Ogni partecipante ha letto e valutato riassunti attraverso i quattro tipi di testo, giudicandoli su molteplici dimensioni di comprensione. La valutazione è stata progettata come uno **studio between-subjects** per evitare effetti di apprendimento — i partecipanti vedevano ogni caso sottostante una sola volta, in uno dei quattro formati testuali.
+I numeri principali:
 
-## Risultati
+- **Massime di esperti: 45%** di comprensione. Il nostro tetto, come previsto.
+- **GPT-4o: 38%** di comprensione. Significativamente meglio delle sentenze grezze.
+- **Sentenze originali: 33%** di comprensione. Lo status quo.
+- **LLaMA 2 7B fine-tuned: 30%** di comprensione. Leggermente *peggio* della sentenza grezza.
 
-### Valutazioni di Comprensione
+Quest'ultimo merita una pausa. Fare il fine-tuning di un piccolo modello open su 10.000 riassunti di esperti non ha aiutato. Ha peggiorato. La capacità conta; per questo task, 7B parametri sembra essere troppo poco per interiorizzare la comprensione strutturale che rende buona una massima.
 
-Le massime degli esperti hanno raggiunto il punteggio di comprensione complessivo più alto (**45%**), confermando il loro valore come riassunti giuridici accessibili. Tuttavia, il divario con le alternative generate dall'IA era più piccolo di quanto ci si potesse aspettare:
+GPT-4o, dall'altra parte, dà un significativo +5 punti rispetto a leggere la sentenza da soli. È reale.
 
-- **Massime degli esperti**: 45% di comprensione
-- **Riassunti di GPT-4o**: 38% di comprensione
-- **Sentenze originali**: 33% di comprensione
-- **LLaMA 2 fine-tuned**: 30% di comprensione
+## E poi diventa scomodo
 
-I riassunti di GPT-4o hanno significativamente superato le sentenze originali, dimostrando che la summarizzazione tramite LLM rende effettivamente il testo giuridico più accessibile, anche senza fine-tuning specifico per il dominio. Curiosamente, il modello LLaMA 2 fine-tuned ha performato leggermente al di sotto delle sentenze originali, suggerendo che il fine-tuning su un modello più piccolo con capacità limitata potrebbe non essere sufficiente per questo compito complesso.
+Ecco la parte che dovrebbe darti da pensare.
 
-### Il Problema degli Errori Sicuri
+Quando abbiamo guardato *quali tipi di risposte sbagliate* davano le persone, i lettori di GPT-4o mostravano un tasso molto più alto di **errori sicuri**. Non solo capivano male — uscivano con comprensioni forti, definitive e *sbagliate* di cosa avesse stabilito la Corte.
 
-Una delle scoperte più significative riguardava la **tendenza di GPT-4o a produrre informazioni errate ma dichiarate con sicurezza**. I partecipanti che leggevano i riassunti di GPT-4o mostravano un tasso più alto di risposte sicure ma sbagliate alle domande di comprensione. Questo è particolarmente preoccupante nel dominio giuridico, dove una comprensione errata di una sentenza può avere conseguenze reali.
+Il testo era fluente. Autorevole. Liscio. Si leggeva come se l'avesse scritto un esperto. E nei casi in cui era sbagliato, quella fluenza rendeva i lettori più sicuri, non meno, di aver capito.
 
-Lo stile di scrittura fluente e autorevole del modello crea un'illusione di affidabilità che può indurre i lettori ad accettare riassunti imprecisi. Questo pattern di "errore sicuro" è ben documentato nella ricerca sugli LLM in generale, ma le sue implicazioni per il testo giuridico sono particolarmente serie.
+Non è unico al riassunto giuridico. È il noto pattern degli LLM di *confabulazione fluente*. Ma la posta in gioco cambia radicalmente quando il tema è "cosa ha detto la Corte Costituzionale sui tuoi diritti". Un lettore sicuro di sé ma sbagliato di una sentenza è peggio di un lettore confuso. La confusione ti spinge a chiedere. La sicurezza no.
 
-### Effetto delle Conoscenze Giuridiche
+## Cosa ha fatto il titolo di studio sul quadro
 
-Il background giuridico dei partecipanti ha influenzato significativamente i pattern di comprensione. Coloro con conoscenze giuridiche mostravano una comprensione più uniforme tra i tipi di testo, mentre coloro senza conoscenze giuridiche erano più fortemente influenzati dal formato del testo. Questo suggerisce che i riassunti generati dagli LLM possono essere particolarmente preziosi — ma anche particolarmente rischiosi — per il loro pubblico previsto di non esperti.
+I partecipanti con conoscenza giuridica avevano una comprensione più uniforme su tutti i tipi di testo — leggevano la sentenza originale all'incirca come il riassunto. Il formato contava meno perché portavano il proprio grounding.
 
-### Analisi Statistica
+I partecipanti senza conoscenza giuridica erano enormemente dipendenti dal formato. Hanno beneficiato di più di un buon riassunto — ed erano i più vulnerabili a un riassunto sicuro ma sbagliato.
 
-Abbiamo impiegato **test del Chi-quadrato** per valutare la significatività statistica delle differenze tra i tipi di testo. L'analisi ha confermato che le differenze tra le massime degli esperti e i riassunti generati dagli LLM erano statisticamente significative, così come le differenze tra i riassunti di GPT-4o e quelli di LLaMA 2 fine-tuned.
+In altre parole: **le persone che il riassunto LLM dovrebbe aiutare sono anche le persone più esposte alle sue modalità di fallimento**. È il vincolo di design che chiunque deployi questo tipo di strumento deve prendere sul serio.
 
-## Implicazioni
+## Cosa farne davvero
 
-### Per la Tecnologia Giuridica
+Tre conclusioni concrete.
 
-I risultati suggeriscono che gli LLM attuali si stanno avvicinando ma non hanno ancora raggiunto la qualità della summarizzazione giuridica esperta. GPT-4o produce riassunti significativamente più accessibili delle sentenze grezze, il che ha un valore pratico immediato. Tuttavia, il problema degli errori sicuri significa che il deployment non supervisionato di riassunti giuridici generati dagli LLM comporta dei rischi.
+**Per chi costruisce legal-tech:** i riassunti LLM di testo giuridico sono una vera vincita sull'accessibilità, ma il deployment grezzo è pericoloso. Il pattern giusto è **bozze LLM, revisione esperta** — usa il modello per la scala, l'umano per l'accuratezza. Il risparmio è nel *revisionare* una bozza invece di scriverla da zero.
 
-Una strategia di deployment pratica potrebbe coinvolgere **bozze generate dagli LLM riviste da esperti giuridici** — combinando la scalabilità della summarizzazione automatizzata con l'accuratezza della supervisione umana. Questo approccio ibrido potrebbe rendere le informazioni giuridiche più accessibili gestendo al contempo il rischio di errori.
+**Per i ricercatori AI:** le metriche di valutazione che premiano fluenza e coerenza *mancano completamente questa classe di fallimenti*. Servono metodi di valutazione che cerchino specificamente l'errore sicuro. Un riassunto che si legge magnificamente ma ti dice la cosa sbagliata è un fallimento peggiore di uno goffo ma corretto.
 
-### Per la Ricerca sull'IA
+**Per tutti gli altri:** quando leggi un documento giuridico riassunto da un'AI — o qualunque documento ad alta posta in gioco — calibra. La sicurezza nella prosa non è prova della verità della prosa. La fluenza è la confezione, non il contenuto.
 
-Lo studio evidenzia il divario tra fluenza e accuratezza negli output degli LLM. I modelli possono produrre testo che si legge in modo convincente e appare autorevole pur contenendo errori sostanziali. Sviluppare metodologie di valutazione che rilevino in modo affidabile questo pattern — oltre le semplici metriche di fluenza o coerenza — è un importante problema di ricerca aperto.
+## Il quadro più ampio
 
-### Per la Società
+L'accessibilità dell'informazione giuridica è, alla fine, una questione di partecipazione democratica. Quando i cittadini non possono leggere le sentenze che governano le loro vite, i principi di trasparenza e responsabilità si erodono. Gli LLM possono aiutare a chiudere quel divario. Possono anche, se deployati senza cura, allargare un divario diverso — quello tra ciò che le persone *pensano* di aver capito e ciò che hanno effettivamente capito.
 
-Migliorare l'accessibilità delle informazioni giuridiche è fondamentalmente una questione di partecipazione democratica. Quando i cittadini non possono comprendere le decisioni legali che influenzano le loro vite, i principi di trasparenza e responsabilità vengono compromessi. I nostri risultati suggeriscono che gli LLM possono contribuire a questo obiettivo, ma un deployment attento con appropriate salvaguardie è essenziale.
+La tecnologia è pronta ad assistere. Non è pronta a essere lasciata da sola.
 
 ---
 
-*Pubblicato alla 23ª Conferenza Internazionale IEEE/WIC su Web Intelligence e Intelligent Agent Technology (WI-IAT 2024), dicembre 2024. Questa ricerca è stata condotta presso l'Università degli Studi di Trieste e la NOVA Information Management School (NOVA IMS), Universidade Nova de Lisboa.*
+### Reference
+
+Questo post è una sintesi divulgativa di:
+
+> Pinna, G., Manzoni, L., De Lorenzo, A., Castelli, M. (2024). *From Courts to Comprehension: Can LLMs Make Judgments More Accessible?*. In: **Proceedings of the 23rd IEEE/WIC International Conference on Web Intelligence and Intelligent Agent Technology (WI-IAT 2024)**, dicembre 2024.
+>
+> [Leggi il paper originale (PDF)](/images/wiat2024-courts-to-comprehension/2024_WI_IAT_From_Courts_to_Comprehension__Can_LLMs_Make_Judgments_More_Accessible_.pdf)
+
+*Ricerca condotta presso l'Università degli Studi di Trieste e la NOVA Information Management School (NOVA IMS), Universidade Nova de Lisboa.*

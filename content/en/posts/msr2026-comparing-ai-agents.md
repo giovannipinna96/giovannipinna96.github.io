@@ -1,95 +1,86 @@
 ---
-title: "Comparing AI Coding Agents: A Task-Stratified Analysis of Pull Request Acceptance"
+title: "There Is No \"Best\" AI Coding Agent — And That's the Whole Point"
 date: 2026-04-14
 draft: false
 tags: ["AI Coding Agents", "Pull Requests", "Empirical Study", "Software Engineering", "MSR"]
 categories: ["Research"]
-description: "A large-scale empirical study of 7,156 pull requests across five AI coding agents, revealing that task type is the dominant factor in PR acceptance — more than the choice of agent — and that no single agent wins across all task categories."
+description: "We looked at 7,156 pull requests from five AI coding agents on real open-source projects. The agent matters less than you'd think. The kind of work matters far more."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/msr2026-comparing-ai-agents/Figure1.png"
+  alt: "Acceptance rates across AI coding agents and task types"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-We present a large-scale empirical study of 7,156 pull requests authored by five AI coding agents — OpenAI Codex, Claude Code, Cursor, Devin, and GitHub Copilot — in real open-source repositories. By stratifying results by task type (bug fixing, feature implementation, documentation, refactoring, dependency updates, and testing), we discover that task type is the dominant factor in PR acceptance, with a 29 percentage-point gap between the best and worst task categories — far exceeding the variance between agents within any single category. No single agent outperforms all others across all task types: Codex achieves the most consistent general-purpose results, Claude Code leads in documentation tasks, and Cursor excels at bug fixing. These findings suggest that development teams should adopt an "agent portfolio" approach, matching each agent to the tasks where it performs best. Published at MSR 2026, Mining Challenge.
+{{< summary-box title="TL;DR" >}}
+We pulled **7,156 real pull requests** authored by Codex, Claude Code, Cursor, Devin, and Copilot, then sliced the data by *task type*. The headline: the gap between best and worst task category is **29 percentage points** — far bigger than the gap between agents inside any single category. Codex is the steady generalist. Claude Code wins documentation. Cursor wins bug fixes. Stop asking *which agent is best*. Start asking *best at what*.
 {{< /summary-box >}}
 
-## Introduction
+## The wrong question
 
-AI coding agents have transitioned from research prototypes to production tools with remarkable speed. GitHub Copilot, OpenAI Codex, Devin, Cursor, Claude Code — these systems are no longer confined to writing code snippets or completing function bodies. They create entire pull requests, implement features end-to-end, fix bugs across multiple files, and update documentation with minimal human supervision.
+Walk into any engineering Slack and you'll see the same debate: Codex vs. Claude Code vs. Cursor vs. Devin vs. Copilot. Threads explode. Benchmarks fly. Someone screenshots a leaderboard.
 
-This rapid adoption has produced an inevitable question: **how do these agents actually compare in real-world practice?** Most existing evaluations answer this through controlled benchmarks — synthetic problems designed to test specific capabilities under standardized conditions. While valuable, benchmarks have well-known limitations: they may not reflect the diversity, messiness, and complexity of real-world software engineering tasks.
+The honest answer to "which is best" is *it depends* — but that answer feels like a cop-out. So we tried to make it concrete. We grabbed 7,156 pull requests these five agents had actually opened against real open-source repos, and we measured what really matters: **did a human maintainer merge it?**
 
-This paper, published at **MSR 2026** (the 23rd International Conference on Mining Software Repositories), takes a different approach. Rather than benchmarking agents on synthetic tasks, we studied their performance on **real pull requests** in **real open-source repositories**, using acceptance rates as the ultimate signal of practical utility.
+Then we did the part most evaluations skip. We split the PRs by what kind of work they were doing.
 
-## Study Design
+## Why a single number lies
 
-### Dataset
+Bug fixes, feature work, documentation, refactors, dependency bumps, tests — these are not the same task. They have wildly different difficulty profiles for an AI agent. Documentation is mostly natural-language generation against a soft target. Feature implementation requires holding a mental model of an architecture. Bug fixing demands navigating someone else's code.
 
-We analyzed **7,156 pull requests** authored by **five AI coding agents** across a diverse set of open-source repositories. Each pull request represents a complete unit of work — code changes, commit messages, and PR descriptions — submitted to a real project with real maintainers making real acceptance decisions.
+If you average across all of them, you get a number. You also lose the entire story.
 
-### Task Stratification
+So instead of one acceptance rate per agent, we computed an acceptance rate **per agent, per task type**.
 
-The key methodological contribution of this study is **task stratification**. Rather than computing a single overall acceptance rate per agent (which obscures important variation), we categorized each pull request by the type of task it addresses:
+![Acceptance rates by AI coding agent and task type](/images/msr2026-comparing-ai-agents/Figure1.png)
 
-- **Bug fixing**: Correcting defects in existing code
-- **Feature implementation**: Adding new functionality
-- **Documentation**: Updating or creating documentation
-- **Refactoring**: Restructuring code without changing behavior
-- **Dependency updates**: Upgrading libraries and dependencies
-- **Testing**: Adding or improving test coverage
+## The headline finding
 
-This stratification enables a much richer comparison: instead of asking "which agent is best overall?", we can ask "which agent is best for each type of work?"
+Look at the chart. The thing your eye should jump to is *vertical*, not horizontal.
 
-## The Key Finding: Task Type Dominates
+The gap between the best task category and the worst is roughly **29 percentage points**. The gap between agents *within* any one category is far smaller. **The kind of work you give an agent predicts acceptance much more strongly than which agent you picked.**
 
-Our most striking result is that **task type is the dominant factor influencing whether an AI-generated pull request gets accepted**. The acceptance rate gap between the best-performing and worst-performing task categories reached **29 percentage points** — substantially exceeding the variance between different agents within any single category.
+That reframes the entire conversation. Asking "is Cursor better than Claude Code?" is like asking "is a chef better than a sushi chef?" — the question is missing a noun. *Better at what?*
 
-This finding has profound implications for how we think about AI agent evaluation. The common framing of "which agent is best?" turns out to be somewhat misleading. The more useful question is: "which agent is best for *this specific type of task*?"
+## Each agent has a beat
 
-Different task categories have inherently different difficulty levels for AI agents. Documentation tasks, which primarily involve generating and editing natural language with relatively well-defined structure, tend to have higher acceptance rates. Feature implementation tasks, which require understanding complex system architecture and making decisions about design trade-offs, tend to have lower acceptance rates. These differences in inherent difficulty dwarf the differences between agents.
+When you slice properly, the agents stop blurring together. They develop personalities.
 
-## Agent-Specific Strengths
+![Per-agent strengths across task types](/images/msr2026-comparing-ai-agents/Figure2.png)
 
-Our task-stratified analysis revealed that **no single agent outperforms all others across all task types**. Instead, each agent has genuine areas of strength:
+**Codex** — the generalist. No spectacular peaks, no embarrassing valleys. If you only get to pick one agent and you don't know what's coming next, this is probably the safe default.
 
-### OpenAI Codex
+**Claude Code** — documentation. Its language fluency translates straight into PR descriptions, README rewrites, and inline comments that maintainers actually want to merge.
 
-Codex achieved consistently high acceptance rates across most task categories, making it a solid **general-purpose choice**. Its strength lies in its versatility — it does not have dramatic peaks or valleys across task types, performing reliably regardless of what type of work is being done.
+**Cursor** — bug fixes. The IDE integration gives it deeper context about the surrounding code, and that context is exactly what bug fixing needs.
 
-### Claude Code
+Devin and Copilot land elsewhere on this map — the full breakdown is in the paper. The point isn't the leaderboard, it's that **there's no single ranking**. There's a shape.
 
-Claude Code showed particular strength in **documentation tasks**, where its sophisticated language generation capabilities translate directly into high-quality prose. Documentation updates, README improvements, and inline comment generation all benefited from Claude Code's natural language fluency.
+## What to actually do with this
 
-### Cursor
+If you ship code with AI agents, two things follow:
 
-Cursor excelled specifically in **bug-fixing scenarios**. Its IDE-integrated workflow, which provides deep context about the surrounding codebase during the fix process, appears to give it an advantage when the task requires navigating and understanding existing code to identify and correct defects.
+**Route by task, not by preference.** A team that hands every kind of work to its favorite agent is leaving acceptance rate on the table. Documentation PR? Send it to Claude Code. Subtle bug? Cursor. Random Tuesday cleanup? Codex. Treat your agents like a team with different specialties, because that's what they are.
 
-### The Heterogeneous Landscape
+**Calibrate your expectations.** When a feature-implementation PR fails review, that may not be the agent's fault — it may be the *task's* fault. A 40% acceptance rate on hard tasks isn't a broken agent. A 70% rate on easy tasks isn't a magical one. Both are noise around a baseline set by the work itself.
 
-These findings paint a picture of a genuinely heterogeneous landscape. Different agents have different cognitive profiles — much like human developers who specialize in different aspects of software engineering. A developer who excels at debugging may not be the best choice for writing documentation, and vice versa. The same applies to AI agents.
+## What this changes for the field
 
-## Practical Implications
+For agent developers: *stop chasing aggregate benchmark scores*. They hide where you're losing. The path to a better agent runs through the task category where you currently underperform.
 
-### For Development Teams
+For researchers: report per-task numbers, always. A single acceptance rate is not a measurement, it's a smoothing function over your most interesting variation.
 
-The practical takeaway is twofold:
-
-1. **Match the agent to the task.** Rather than defaulting to a single agent for all work, development teams can achieve better results by routing different types of work to the agents best suited for them. Bug fixes go to one agent, documentation updates to another, feature implementations to a third. This "agent portfolio" approach can meaningfully improve overall acceptance rates.
-
-2. **Set realistic expectations by task type.** Some categories of work are inherently harder for AI agents than others. Understanding these baselines helps teams calibrate their review processes and avoid frustration when agents struggle with certain task types. If feature implementation PRs have a 40% acceptance rate while documentation PRs have a 69% acceptance rate, the difference reflects task difficulty, not agent quality.
-
-### For Agent Developers
-
-The task-stratified analysis provides specific guidance for agent improvement. Rather than optimizing for aggregate benchmarks, agent developers can focus on the task categories where their agent underperforms relative to competitors. This targeted improvement approach is more efficient and more likely to produce meaningful capability gains.
-
-### For Researchers
-
-Our findings highlight the critical importance of **task-stratified evaluation** in AI agent research. Aggregate metrics — overall acceptance rate, average benchmark score — can mask important performance variations that only become visible when results are broken down by task type. Future evaluations of AI coding agents should routinely report task-level performance to give a complete and honest picture.
-
-## The Bigger Picture
-
-As AI coding agents become increasingly integrated into software development workflows, understanding their actual capabilities and limitations — not as measured by synthetic benchmarks, but as observed in real-world deployment — is essential. Our study contributes a large-scale empirical foundation for this understanding, demonstrating that the question "which agent should I use?" has a more nuanced answer than most practitioners realize.
+And for everyone else: when someone tells you their agent is the best, ask them *at what*. If they can't answer, neither can their agent.
 
 ---
 
-*Published at the 23rd International Conference on Mining Software Repositories (MSR 2026) — Mining Challenge. This research was conducted at University College London (UCL).*
+### Reference
+
+This post is a divulgative summary of:
+
+> Pinna, G., Sarro, F. (2026). *Comparing AI Coding Agents: A Task-Stratified Analysis of Pull Request Acceptance*. In: **Proceedings of the 23rd International Conference on Mining Software Repositories (MSR 2026)** — Mining Challenge Track.
+>
+> [Read the original paper (PDF)](/images/msr2026-comparing-ai-agents/MSR'26%20Mining%20Challenge%20-%20Comparing%20AI%20Coding%20Agents_%20A%20Task-Stratified%20Analysis%20of%20Pull%20Request%20Acceptance.pdf)
+
+*Research conducted at University College London (UCL), CREST, with Prof. Federica Sarro.*

@@ -73,7 +73,7 @@ ShowBreadCrumbs: false
   <h2>🌍 International Experience</h2>
   <p>I believe the best research happens at the intersection of diverse perspectives:</p>
   <div class="about-fun-grid">
-    <div class="fun-item">🇬🇧 Visiting Researcher at UCL, London (CREST Centre)</div>
+    <div class="fun-item">🇬🇧 Visiting Researcher at UCL, London</div>
     <div class="fun-item">🇵🇹 Two visiting stays at NOVA IMS, Lisbon</div>
     <div class="fun-item">🇦🇹 Erasmus semester at Montanuniversit&auml;t Leoben</div>
     <div class="fun-item">🎓 5 international summer/winter schools (Oxford, Lisbon, Athens, French Alps, Gran Canaria)</div>

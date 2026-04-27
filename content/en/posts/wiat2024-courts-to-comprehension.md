@@ -1,95 +1,106 @@
 ---
-title: "From Courts to Comprehension: Can LLMs Make Legal Judgments More Accessible?"
+title: "GPT-4 Can Make Court Rulings Easier to Read. It Can Also Lie to You About Them, Confidently."
 date: 2024-12-10
 draft: false
 tags: ["LLM", "Legal NLP", "Text Summarization", "Fine-Tuning", "Accessibility"]
 categories: ["Research"]
-description: "A human evaluation study examining whether LLM-generated summaries of Italian Constitutional Court judgments can match the comprehensibility of expert-written legal summaries."
+description: "We asked 75 people to read summaries of Italian Constitutional Court rulings — written by experts, by GPT-4o, by a fine-tuned LLaMA, and the raw judgments themselves. The results say more about LLMs than about courts."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/wiat2024-courts-to-comprehension/percentuale_delle_risposte_corrette_per_titolo_di_studio.png"
+  alt: "Comprehension rates across text types and educational background"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-Legal judgments are largely inaccessible to non-experts due to specialized vocabulary and complex reasoning. We investigate whether LLM-generated summaries of Italian Constitutional Court decisions can match the comprehensibility of expert-written massime. In a human evaluation study with 75 participants (25% with legal knowledge, 75% without), we compared four text types: original judgments, expert massime, GPT-4o summaries, and summaries from a LLaMA 2 7B model fine-tuned on 10,000 judgment-massima pairs. Expert massime scored highest in comprehension (45%), followed by GPT-4o (38%), original judgments (33%), and fine-tuned LLaMA 2 (30%). While GPT-4o significantly outperforms raw judgments, it exhibits a concerning "confident error" pattern — producing fluent and authoritative text that contains substantive inaccuracies, leading readers to incorrect but confidently held understandings. These findings suggest LLMs can contribute to legal accessibility, but careful human oversight remains essential. Published at IEEE WI-IAT 2024.
+{{< summary-box title="TL;DR" >}}
+Italian Constitutional Court rulings are written for lawyers. Most citizens can't follow them. Can an LLM fix that? We ran a 75-person human study comparing four versions of the same legal content: original judgments, expert "massime" summaries, GPT-4o summaries, and a fine-tuned LLaMA 2 7B. Comprehension rates: **expert summaries 45%**, **GPT-4o 38%**, **raw judgments 33%**, **fine-tuned LLaMA 30%**. GPT-4o really does make legal text more readable. It also produces a worrying pattern: **confident, fluent, wrong** — readers leave with strongly held but incorrect understandings. Use LLMs for legal summarization. Don't use them without human review.
 {{< /summary-box >}}
 
-## Introduction
+## A democratic problem dressed up as a technical one
 
-Legal language is notoriously difficult to understand. Court judgments, in particular, are written by and for legal professionals, employing specialized vocabulary, complex sentence structures, and implicit references to legal doctrines that make them largely opaque to non-experts. This creates a significant accessibility barrier: the citizens whose lives are affected by judicial decisions often cannot understand the reasoning behind those decisions.
+Constitutional Court rulings are some of the most important documents a country produces. They define what your government can and can't do. They shape what your rights are. They are also written by lawyers, for lawyers, in dense Italian legal prose that the average citizen has no chance of understanding.
 
-In the Italian legal system, the Corte Costituzionale (Constitutional Court) publishes two types of documents for each decision: the full judgment (*sentenza*), which contains the complete legal reasoning, and a condensed summary called a *massima* (plural: *massime*), which is written by legal experts to capture the key holdings and rationale. Massime are designed to be more accessible than full judgments, but they still require considerable legal literacy to understand.
+The Italian Corte Costituzionale already tries to fix this. For each judgment they publish a *massima* — a condensed summary written by legal experts whose entire job is making case law accessible. Massime are better than full judgments, but they still assume legal literacy most people don't have.
 
-This raises a compelling question: **can Large Language Models generate summaries of legal judgments that are as comprehensible to non-experts as the expert-written massime — or even more so?**
+So the question is straightforward: **can an LLM help close the gap?** Not by replacing judges or replacing legal experts, but by producing summaries that an ordinary citizen can actually read?
 
-This paper, published at **IEEE WI-IAT 2024** (the 23rd IEEE/WIC International Conference on Web Intelligence and Intelligent Agent Technology), addresses this question through a rigorous human evaluation study.
+We ran the experiment.
 
-## Study Design
+## What we tested
 
-### The Four Text Types
+Four versions of the same legal content:
 
-We compared four different versions of the same legal content:
+1. **Original judgments** (sentenze) — the raw text from the court.
+2. **Expert massime** — the human-written summaries, our quality ceiling.
+3. **GPT-4o summaries** — generated by prompting OpenAI's GPT-4o on each judgment.
+4. **Fine-tuned LLaMA 2 7B** — a smaller open-source model trained on **10,000 judgment-massima pairs** scraped from the Court's archives.
 
-1. **Original judgments** (*sentenze*): The full text as published by the Constitutional Court
-2. **Expert massime**: Summaries written by legal professionals
-3. **GPT-4o summaries**: Generated by prompting OpenAI's GPT-4o model to summarize the original judgments
-4. **Fine-tuned LLaMA 2 summaries**: Generated by a LLaMA 2 7B model fine-tuned specifically on Italian legal text
+We also tried Gemma 2B/7B and LLaMantino 7B (an Italian-specialized LLaMA) in the fine-tuning pipeline; LLaMA 2 7B was the best performer, so it represents the open-source side in the human study.
 
-### Fine-Tuning Process
+## How we measured comprehension
 
-The fine-tuned model was trained on a corpus of **10,000 judgment-massima pairs** from the Constitutional Court's archives. This dataset provided the model with extensive examples of how legal experts distill complex judgments into concise summaries. We also evaluated additional models in the fine-tuning pipeline, including **Gemma 2B and 7B** and **LLaMantino 7B** (an Italian-specialized variant of LLaMA), ultimately selecting the best-performing model for the human evaluation.
+75 participants. Roughly **25% with legal knowledge** (law students, professionals), **75% without** (general public). Each person read summaries across text types and answered comprehension questions on the actual content.
 
-### Human Evaluation Protocol
+We ran it as a between-subjects design — each underlying case was seen by each participant in only one of the four formats — to kill learning effects. Differences across formats were tested with chi-squared.
 
-We recruited **75 participants** for the study, divided into two groups based on their legal knowledge:
+![Comprehension by educational background across text types](/images/wiat2024-courts-to-comprehension/percentuale_delle_risposte_corrette_per_titolo_di_studio.png)
 
-- **25% with legal knowledge** (law students, legal professionals)
-- **75% without legal knowledge** (general public)
+## What we found
 
-Each participant read and evaluated summaries across the four text types, rating them on multiple comprehension dimensions. The evaluation was designed as a **between-subjects study** to avoid learning effects — participants saw each underlying case only once, in one of the four text formats.
+The headline numbers:
 
-## Results
+- **Expert massime: 45%** comprehension. Our ceiling, as expected.
+- **GPT-4o: 38%** comprehension. Significantly better than raw judgments.
+- **Original judgments: 33%** comprehension. The status quo.
+- **Fine-tuned LLaMA 2 7B: 30%** comprehension. Slightly *worse* than the raw judgment.
 
-### Comprehension Ratings
+That last one is worth a beat. Fine-tuning a small open model on 10,000 expert summaries didn't help. It hurt. Capacity matters; for this task, 7B parameters appears to be too small to internalize the structural understanding that makes a good massima.
 
-The expert massime achieved the highest overall comprehension score (**45%**), confirming their value as accessible legal summaries. However, the gap with AI-generated alternatives was smaller than one might expect:
+GPT-4o, on the other hand, gives a meaningful 5-point lift over reading the judgment yourself. That's real.
 
-- **Expert massime**: 45% comprehension
-- **GPT-4o summaries**: 38% comprehension
-- **Original judgments**: 33% comprehension
-- **Fine-tuned LLaMA 2**: 30% comprehension
+## And then it gets uncomfortable
 
-GPT-4o summaries significantly outperformed the original judgments, demonstrating that LLM summarization does make legal text more accessible, even without domain-specific fine-tuning. Interestingly, the fine-tuned LLaMA 2 model performed slightly below the original judgments, suggesting that fine-tuning on a smaller model with limited capacity may not be sufficient for this complex task.
+Here's the part that should give you pause.
 
-### The Confident Error Problem
+When we looked at *which kinds of wrong answers* people gave, GPT-4o readers showed a much higher rate of **confident incorrectness**. They didn't just misunderstand — they came away with strong, definite, *wrong* understandings of what the court had ruled.
 
-One of the most significant findings concerned **GPT-4o's tendency to produce confidently stated but incorrect information**. Participants who read GPT-4o summaries showed a higher rate of confident but wrong answers on comprehension questions. This is particularly concerning in the legal domain, where incorrect understanding of a judgment can have real consequences.
+The text was fluent. Authoritative. Smooth. It read like an expert wrote it. And in the cases where it was wrong, that fluency made the readers more, not less, sure that they understood.
 
-The model's fluent, authoritative writing style creates an illusion of reliability that can mislead readers into accepting inaccurate summaries. This "confident error" pattern is well-documented in LLM research broadly, but its implications for legal text are especially serious.
+This isn't unique to legal summarization. It's the well-known LLM pattern of *fluent confabulation*. But the stakes change radically when the topic is "what did the constitutional court say about your rights." A confidently wrong reader of a court ruling is worse than a confused reader of one. Confusion prompts you to ask. Confidence does not.
 
-### Effect of Legal Knowledge
+## What educational background did to the picture
 
-The participants' legal background significantly influenced their comprehension patterns. Those with legal knowledge showed more uniform comprehension across text types, while those without legal knowledge were more strongly affected by the text format. This suggests that LLM-generated summaries may be particularly valuable — but also particularly risky — for their intended audience of non-experts.
+Participants with legal knowledge had more uniform comprehension across all text types — they could read the original judgment about as well as the summary. The format mattered less because they brought their own grounding.
 
-### Statistical Analysis
+Participants without legal knowledge were enormously dependent on the format. They benefited the most from a good summary — and were the most vulnerable to a confidently wrong summary.
 
-We employed **Chi-squared tests** to assess the statistical significance of differences between text types. The analysis confirmed that the differences between expert massime and LLM-generated summaries were statistically significant, as were the differences between GPT-4o and fine-tuned LLaMA 2 summaries.
+In other words: **the people LLM summarization is supposed to help are also the people most exposed to its failure modes**. That's the design constraint anyone deploying this kind of tool needs to take seriously.
 
-## Implications
+## What to actually do with this
 
-### For Legal Technology
+Three concrete takeaways.
 
-The results suggest that current LLMs are approaching but have not yet reached the quality of expert legal summarization. GPT-4o produces summaries that are significantly more accessible than raw judgments, which has immediate practical value. However, the confident error problem means that unsupervised deployment of LLM-generated legal summaries poses risks.
+**For legal-tech builders:** LLM summaries of legal text are a real win on accessibility, but raw deployment is dangerous. The right pattern is **LLM drafts, expert review** — use the model for scale, use the human for accuracy. The cost saving is in *reviewing* a draft instead of writing one from scratch.
 
-A practical deployment strategy might involve **LLM-generated drafts reviewed by legal experts** — combining the scalability of automated summarization with the accuracy of human oversight. This hybrid approach could make legal information more accessible while managing the risk of errors.
+**For AI researchers:** evaluation metrics that reward fluency and coherence will *miss this entire class of failure*. We need evaluation methods that probe for confident incorrectness specifically. A summary that reads beautifully but tells you the wrong thing is a worse failure than one that's clunky but right.
 
-### For AI Research
+**For everyone else:** when you read an AI-summarized legal document — or any high-stakes document — calibrate. The confidence in the prose is not evidence of the truth of the prose. The fluency is the package, not the contents.
 
-The study highlights the gap between fluency and accuracy in LLM outputs. Models can produce text that reads convincingly and appears authoritative while containing substantive errors. Developing evaluation methodologies that reliably detect this pattern — beyond simple fluency or coherence metrics — is an important open research problem.
+## The bigger picture
 
-### For Society
+The accessibility of legal information is, ultimately, a question of democratic participation. When citizens can't read the rulings that govern their lives, the principles of transparency and accountability erode. LLMs can help close that gap. They can also, if deployed without care, widen a different gap — the one between what people *think* they understand and what they actually do.
 
-Improving the accessibility of legal information is fundamentally a question of democratic participation. When citizens cannot understand the legal decisions that affect their lives, the principles of transparency and accountability are undermined. Our findings suggest that LLMs can contribute to this goal, but careful deployment with appropriate safeguards is essential.
+The technology is ready to assist. It's not ready to be left alone.
 
 ---
 
-*Published at the 23rd IEEE/WIC International Conference on Web Intelligence and Intelligent Agent Technology (WI-IAT 2024), December 2024. This research was conducted at the University of Trieste and NOVA Information Management School (NOVA IMS), Universidade Nova de Lisboa.*
+### Reference
+
+This post is a divulgative summary of:
+
+> Pinna, G., Manzoni, L., De Lorenzo, A., Castelli, M. (2024). *From Courts to Comprehension: Can LLMs Make Judgments More Accessible?*. In: **Proceedings of the 23rd IEEE/WIC International Conference on Web Intelligence and Intelligent Agent Technology (WI-IAT 2024)**, December 2024.
+>
+> [Read the original paper (PDF)](/images/wiat2024-courts-to-comprehension/2024_WI_IAT_From_Courts_to_Comprehension__Can_LLMs_Make_Judgments_More_Accessible_.pdf)
+
+*Research conducted at the University of Trieste and NOVA Information Management School (NOVA IMS), Universidade Nova de Lisboa.*

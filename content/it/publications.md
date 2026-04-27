@@ -29,9 +29,3 @@ ShowToc: false
 ## Workshop Paper
 
 - **Pinna, G.**, Ravalico, D., Rovito, L., Manzoni, L., De Lorenzo, A. (2025). "Improving LLM-Generated Code via Genetic Improvement: A Summary of Recent Advances." *CEUR Workshop Proceedings*. Ital-IA 2025.
-
-## Articoli in Fase di Sottomissione
-
-- **Pinna, G.**, Fenu, C. et al. "L'Edicola della Storia di Trieste: NLP e Distant Reading per il confronto tra periodici storici italiani e sloveni nella Trieste del 1902." Sottomesso a *AIUCD 2026*.
-
-- Autori Anonimi incl. **Pinna, G.** (2026). "Factors Associated with Agentic Pull Request Acceptance." Sottomesso a *EASE 2026*.

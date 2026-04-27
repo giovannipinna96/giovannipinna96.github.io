@@ -73,7 +73,7 @@ ShowBreadCrumbs: false
   <h2>🌍 Esperienza Internazionale</h2>
   <p>Credo che la migliore ricerca nasca all'intersezione di prospettive diverse:</p>
   <div class="about-fun-grid">
-    <div class="fun-item">🇬🇧 Visiting Researcher a UCL, Londra (CREST Centre)</div>
+    <div class="fun-item">🇬🇧 Visiting Researcher a UCL, Londra</div>
     <div class="fun-item">🇵🇹 Due soggiorni alla NOVA IMS, Lisbona</div>
     <div class="fun-item">🇦🇹 Semestre Erasmus alla Montanuniversit&auml;t Leoben</div>
     <div class="fun-item">🎓 5 summer/winter school internazionali (Oxford, Lisbona, Atene, Alpi Francesi, Gran Canaria)</div>

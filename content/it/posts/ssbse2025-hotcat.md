@@ -1,90 +1,106 @@
 ---
-title: "HotCat: Selezione di Feature Green ed Efficace per la Tassonomia dei Bug Hotfix"
+title: "A volte la migliore feature engineering è buttare via le feature"
 date: 2025-10-13
 draft: false
 tags: ["Tassonomia Bug", "NSGA-II", "Ottimizzazione Multi-Obiettivo", "Green AI", "Selezione Feature"]
 categories: ["Ricerca"]
-description: "Un approccio di ottimizzazione multi-obiettivo per la classificazione degli hotfix software che bilancia qualità della classificazione ed efficienza computazionale, dimostrando che i principi del Green AI possono essere applicati senza sacrificare l'efficacia."
+description: "Classificare gli hotfix software urgenti è difficile: dataset minuscolo, sbilanciamento brutale tra le classi, feature LLM costose. Abbiamo lasciato che l'evoluzione scegliesse quali feature tenere — e abbiamo scoperto che alcune peggioravano attivamente le cose."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/ssbse2025-hotcat/architecture_diagram_4.png"
+  alt: "HotCat: selezione delle feature con NSGA-II per la classificazione dei bug hotfix"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-Classificare gli hotfix software in categorie di bug è impegnativo a causa di dati scarsi, grave sbilanciamento delle classi e alto costo computazionale dell'analisi basata su LLM. HotCat affronta queste sfide tramite l'ottimizzazione multi-obiettivo con NSGA-II, trattando la selezione delle feature come un problema di ricerca su 18 feature disponibili estratte dal dataset HotBugs (88 entry di hotfix su 17 categorie). Il framework ottimizza simultaneamente accuratezza della classificazione, Informazione Mutua Normalizzata e tempo computazionale di esecuzione. Una strategia di augmentazione dei dati a due stadi migliora la generalizzazione dal 55% al 72%. Il fronte di Pareto risultante rivela che qualità della classificazione ed efficienza non devono necessariamente essere in conflitto: una configurazione bilanciata raggiunge il 59% di accuratezza e 0.58 NMI in soli 129 secondi, mentre l'eliminazione selettiva delle feature migliora effettivamente i risultati rimuovendo feature che introducono rumore. Pubblicato a SSBSE 2025, Challenge Track on Hot Fixing Benchmark.
+{{< summary-box title="TL;DR" >}}
+Classificare gli *hotfix* software — le patch in modalità panico che spedisci per riparare qualcosa che si è rotto in produzione adesso — è difficile per il ML: dataset minuscolo (88 entry, 17 categorie), sbilanciamento brutale tra le classi e feature LLM costose. **HotCat** riformula la feature engineering come un problema di ricerca: NSGA-II fa evolvere maschere binarie su 18 feature, ottimizzando accuratezza, NMI *e* runtime contemporaneamente. Una data augmentation a due stadi alza la generalizzazione dal **55% al 72%**. La frontiera di Pareto offre una configurazione bilanciata: **59% accuratezza, 0,58 NMI, 129 secondi**. La cosa più sorprendente: **alcune feature fanno attivamente male** — eliminarle è sia più veloce *che* più accurato.
 {{< /summary-box >}}
 
-## Introduzione
+## Gli hotfix non sono bug normali
 
-Nell'ingegneria del software, non tutti i bug sono uguali. Mentre alcuni difetti possono essere messi in coda per la prossima release programmata, altri richiedono attenzione immediata. Queste patch urgenti — note come **hotfix** — affrontano problemi critici che necessitano di deployment rapido in produzione: vulnerabilità di sicurezza, malfunzionamenti nell'elaborazione dei pagamenti, interruzioni di servizio o bug di corruzione dati che colpiscono utenti in produzione.
+In un qualsiasi progetto software normale, i bug si accodano. Vengono triagiati, prioritizzati, schedulati negli sprint. Alcuni stanno lì per mesi.
 
-Comprendere la natura e la distribuzione di questi hotfix è essenziale per i team di sviluppo software. Una **tassonomia dei bug** ben costruita — una classificazione sistematica dei tipi di bug — aiuta i team a prioritizzare le risorse, identificare pattern di fallimento ricorrenti e implementare misure preventive. Ma costruire tali tassonomie è impegnativo, in particolare per gli hotfix: i dati sono scarsi (gli hotfix sono una piccola frazione di tutte le patch), la distribuzione delle classi è gravemente sbilanciata (alcuni tipi di bug sono molto più rari di altri) e una classificazione accurata richiede un'analisi semantica sofisticata delle modifiche al codice.
+Gli hotfix sono i bug che non possono aspettare. L'autenticazione si è rotta. I pagamenti si sono fermati. I dati dei clienti stanno trapelando. La pipeline di rilascio viene bypassata e una patch esce *adesso*. Sono i bug più costosi da spedire — sia in serate-di-venerdì-tranquille perse, sia in soldi.
 
-Questo articolo, presentato a **SSBSE 2025** (il 17° Symposium on Search-Based Software Engineering) come parte del Challenge Track on Hot Fixing Benchmark, introduce **HotCat** — un framework che affronta queste sfide aderendo ai principi del **Green AI** minimizzando le spese computazionali non necessarie.
+Capire la *forma* dei tuoi hotfix — che tipi di fallimenti continuano a richiedere patch d'emergenza — è enormemente utile. Ti dice dove la tua codebase è fragile, quali categorie di test ti stanno fallendo, quali processi devono cambiare. Lo strumento classico per farlo è una **tassonomia dei bug**: un modo strutturato per dire "questo hotfix era un memory leak, quello era una race condition".
 
-## La Motivazione del Green AI
+Costruire una buona tassonomia automaticamente è difficile. Gli hotfix sono sparsi, le categorie sono selvaggiamente sbilanciate, e l'analisi semantica che serve di solito richiede LLM — che costano soldi veri quando li scali.
 
-Gli approcci moderni all'analisi del codice si affidano sempre più ai Large Language Models per la comprensione semantica — riassumere le modifiche al codice, generare embedding e classificare l'intento. Questi modelli sono potenti ma computazionalmente costosi: ogni inferenza LLM consuma energia, e quando si elaborano migliaia di patch attraverso decine di feature, il costo cumulativo diventa significativo.
+## Due problemi insieme
 
-HotCat pone una domanda diretta: **abbiamo bisogno di tutte le feature disponibili per ottenere una buona classificazione, o possiamo selettivamente ridurre lo spazio delle feature per diminuire il costo computazionale senza sacrificare la qualità?** Questa non è semplicemente una preoccupazione di efficienza — è un imperativo ambientale ed economico, man mano che gli strumenti di analisi basati su LLM diventano standard nei flussi di lavoro di sviluppo.
+Avevamo due motivazioni impilate una sull'altra.
 
-## La Pipeline di HotCat
+**Metodologicamente:** possiamo classificare bene gli hotfix nonostante dati minuscoli e classi sbilanciate?
 
-### Fondamento dei Dati: Il Dataset HotBugs
+**Ambientalmente:** possiamo farlo senza bruciare cicli LLM inutili?
 
-HotCat opera sul dataset **HotBugs**, che contiene **88 entry di hotfix** distribuite su **17 categorie di bug** estratte da progetti software reali. Ogni entry è una patch di codice associata a metadati dal sistema di issue tracking Jira, fornendo sia le modifiche al codice grezze sia informazioni contestuali su ciascuna correzione.
+Non sono domande separate. Il classificatore più economico è quello che usa meno feature. Quello più accurato è qualunque insieme di feature porti davvero segnale. Se queste due cose si sovrappongono — se alcune feature costano molto *e* non aiutano — allora entrambi i problemi possono essere risolti contemporaneamente.
 
-### Ingegnerizzazione delle Feature
+Quindi ci siamo posti la domanda ovvia: quali feature contano davvero?
 
-Partendo dai dati grezzi, HotCat arricchisce lo spazio delle feature integrando:
+## Come funziona HotCat
 
-- **Feature a livello di codice**: Estratte dai diff effettivi — linee aggiunte, linee rimosse, file modificati, complessità sintattica
-- **Metadati di progetto da Jira**: Tempo di risoluzione, numero di partecipanti (sviluppatori, revisori), livelli di priorità e altri segnali organizzativi
-- **Riassunti generati da LLM**: Ogni hotfix viene riassunto utilizzando un LLM per produrre descrizioni concise in linguaggio naturale di cosa fa la patch
+Usiamo il dataset **HotBugs** — 88 entry di hotfix su 17 categorie di bug da progetti reali. Per ognuna, raccogliamo tre tipi di feature:
 
-Questi riassunti vengono poi trasformati in rappresentazioni vettoriali dense usando gli **embedding di Sentence-BERT**, che catturano il contenuto semantico di ogni descrizione. I vettori vengono organizzati attraverso il **clustering K-Means** per produrre la classificazione effettiva.
+- **Feature di codice** dal diff stesso (linee aggiunte/rimosse, file modificati, complessità sintattica)
+- **Metadati di processo** da Jira (tempo per risolvere, numero di partecipanti, priorità)
+- **Riassunti generati da LLM** di ogni patch, embeddati con Sentence-BERT, poi organizzati con K-Means
 
-In totale, sono disponibili **18 feature** per la pipeline di classificazione, creando uno spazio di ricerca di 2^18 (oltre 260.000) possibili combinazioni di feature.
+Diciotto feature in totale. Significa 2^18 ≈ 260.000 sottoinsiemi di feature possibili. La selezione manuale è disperata.
 
-### Selezione Multi-Obiettivo delle Feature con NSGA-II
+![Pipeline HotCat: NSGA-II seleziona maschere di feature contro tre obiettivi](/images/ssbse2025-hotcat/architecture_diagram_4.png)
 
-Questa è l'innovazione centrale. Anziché utilizzare tutte e 18 le feature o selezionarne manualmente un sottoinsieme, HotCat formula la selezione delle feature come un **problema di ottimizzazione multi-obiettivo** e lo risolve con **NSGA-II** (Non-dominated Sorting Genetic Algorithm II), implementato usando la libreria **pymoo**.
+Quindi abbiamo lanciato NSGA-II sopra. Ogni candidato è una maschera binaria sulle 18 feature — tieni o scarta, su ciascuna. Tre obiettivi, ottimizzati congiuntamente:
 
-Ogni soluzione candidata è rappresentata come una **maschera binaria** — un vettore di 0 e 1 che indica quali feature includere. NSGA-II ottimizza simultaneamente tre obiettivi:
+1. **Massimizza l'accuratezza di classificazione.**
+2. **Massimizza l'NMI** (Normalized Mutual Information — robusta allo sbilanciamento delle classi, a differenza dell'accuratezza grezza).
+3. **Minimizza il runtime.**
 
-1. **Massimizzare l'accuratezza della classificazione**: Quanto bene le feature selezionate consentono una corretta categorizzazione dei bug
-2. **Massimizzare l'Informazione Mutua Normalizzata (NMI)**: Una misura dell'accordo tra il clustering predetto e le etichette ground truth, robusta allo sbilanciamento delle dimensioni dei cluster
-3. **Minimizzare il tempo computazionale di esecuzione**: Quanto velocemente la pipeline di classificazione viene eseguita con le feature selezionate
+Popolazione di 20, evoluta per 20 generazioni. Piccolissimo per gli standard di NSGA-II. Sufficiente.
 
-La ricerca evolutiva usa una **popolazione di 20 individui** evoluta per **20 generazioni**, con operatori di crossover binario e mutazione bit-flip adatti alla codifica binaria.
+## I dati sono troppo pochi. Ecco come abbiamo fatto.
 
-Attraverso questo processo, NSGA-II scopre un **fronte di Pareto** di soluzioni non dominate — configurazioni in cui migliorare un obiettivo peggiora necessariamente un altro. Questo offre ai professionisti un menù di opzioni tra cui scegliere in base ai propri vincoli specifici.
+88 entry su 17 categorie significa che alcune categorie hanno una manciata di esempi. La generalizzazione sul dataset grezzo si fermava intorno al 55%, che è ai limiti dell'utile.
 
-### Augmentazione dei Dati per la Robustezza
+Abbiamo aggiunto una **strategia di data augmentation a due stadi**:
 
-Le dimensioni ridotte del dataset HotBugs (88 entry) e il grave sbilanciamento delle classi pongono sfide per qualsiasi approccio di classificazione. HotCat affronta questo con una **strategia di augmentazione a due stadi**:
+1. **Bilanciamento delle categorie** — esempi sintetici per pareggiare le categorie rare.
+2. **Generazione di record post-ottimizzazione** — dati aggiuntivi dopo la selezione delle feature, per irrobustire la generalizzazione.
 
-1. **Bilanciamento delle categorie**: Vengono generati esempi sintetici per equalizzare la rappresentazione delle categorie di bug rare
-2. **Generazione di record post-ottimizzazione**: Dati aggiuntivi vengono creati dopo la fase di selezione delle feature per migliorare la generalizzazione
-
-Questa augmentazione si è rivelata cruciale: **la performance di generalizzazione è migliorata dal 55% al 72%** — un guadagno di 17 punti percentuali che dimostra l'importanza di affrontare la scarsità dei dati in questo dominio.
+Questo ha portato la generalizzazione dal **55% al 72%**. Un salto di 17 punti. La data augmentation non è glamour ma è esattamente quello che serviva qui.
 
 ## Risultati
 
-Il fronte di Pareto ha rivelato diversi punti operativi praticamente utili:
+La frontiera di Pareto dà un menu, non una risposta. Due punti utili sopra:
 
-- **Configurazione bilanciata**: **59% di accuratezza** e **0.58 NMI** con un tempo di esecuzione di soli **129 secondi**
-- **Configurazione a massima accuratezza**: **63% di accuratezza** in **132 secondi** — solo 3 secondi aggiuntivi per un miglioramento di 4 punti percentuali in accuratezza
+![Frontiera di Pareto delle configurazioni accuratezza/NMI vs. runtime](/images/ssbse2025-hotcat/results.png)
 
-Questi risultati dimostrano una scoperta chiave: **qualità della classificazione ed efficienza computazionale non devono necessariamente essere in conflitto**. Una maggiore accuratezza era raggiungibile senza aumenti drastici nel consumo di risorse.
+**Configurazione bilanciata:** 59% di accuratezza, 0,58 NMI, **129 secondi** di runtime.
+**Configurazione di massima accuratezza:** 63% di accuratezza, 132 secondi — tre secondi in più ti comprano quattro punti di accuratezza.
 
-L'analisi ha anche rivelato quali feature contano di più. Non tutti i campi di metadati contribuiscono equamente alla qualità della classificazione — alcune feature in realtà **degradano le prestazioni** introducendo rumore. Eliminando selettivamente queste feature, HotCat ottiene risultati migliori con meno computazione, incarnando il principio del Green AI di fare di più con meno.
+Il risultato principale è strutturale e un po' controintuitivo. **Alcune feature stavano peggiorando le cose.** Rimuoverle selettivamente ha migliorato sia l'accuratezza che il runtime. È il sogno della Green AI: più economico *perché* è migliore, non nonostante lo sia.
 
-## Implicazioni
+Ribalta anche l'istinto classico della feature engineering. La mossa di default quando la classificazione va male è aggiungere più feature. L'evidenza di HotCat dice: *misura prima*. Alcune delle feature che hai aggiunto sono rumore, e il rumore fa male.
 
-HotCat dimostra una metodologia pratica per il **Green AI nell'ingegneria del software**. Man mano che gli strumenti di analisi basati su LLM diventano parte integrante dei flussi di lavoro di sviluppo, la loro impronta energetica cumulativa diventa una preoccupazione concreta. La selezione multi-obiettivo delle feature offre un approccio principiato per tenere sotto controllo questa impronta.
+## Perché questo conta oltre gli hotfix
 
-Il framework è progettato per essere replicabile e scalabile, offrendo ai team un metodo per automatizzare l'analisi degli hotfix all'interno di sistemi di issue tracking come Jira rispettando i vincoli computazionali. Il lavoro futuro espanderà l'approccio a dataset più ampi ed esplorerà l'incorporazione di metriche dirette di emissione di carbonio come obiettivi di ottimizzazione.
+Due insegnamenti vanno oltre questo problema specifico.
+
+**L'ottimizzazione multi-obiettivo sullo spazio delle feature è sottoutilizzata.** La maggior parte delle pipeline ML tratta la feature engineering come un esercizio umano una tantum. NSGA-II la rende un problema di ricerca continua con trade-off espliciti tra cui scegliere. Quel framing si applica ogni volta che hai molte feature candidate e un vero trade-off costo-qualità.
+
+**La Green AI non è una tassa — può essere una guida.** Trattare il runtime come obiettivo di prima classe anziché come ripensamento cambia quali feature sopravvivono. Il risultato è più snello *e* migliore. Mentre gli strumenti di analisi basati su LLM si diffondono nelle pipeline di software engineering, l'organizzazione che si prende la briga di fare questo tipo di tuning pagherà meno e spedirà meglio.
+
+Se stai fissando un task di classificazione con troppe feature e troppo pochi dati, la prossima mossa giusta potrebbe non essere più feature. Potrebbe essere una frontiera di Pareto.
 
 ---
 
-*Pubblicato al 17° Symposium on Search-Based Software Engineering (SSBSE 2025), Challenge Track on Hot Fixing Benchmark. Questa ricerca è stata condotta presso la University College London (UCL) e l'Università degli Studi di Trieste.*
+### Reference
+
+Questo post è una sintesi divulgativa di:
+
+> Pinna, G., Sarro, F. (2025). *HotCat: Green and Effective Feature Selection for Hotfix Bug Taxonomy*. In: **Proceedings of the 17th Symposium on Search-Based Software Engineering (SSBSE 2025)** — Challenge Track on Hot Fixing Benchmark.
+>
+> [Leggi il paper originale (PDF)](/images/ssbse2025-hotcat/SSBSE__25_Challenge__Bug_Taxonomy_Clustering__Camera_Ready_.pdf)
+
+*Ricerca condotta presso la University College London (UCL) e l'Università degli Studi di Trieste.*

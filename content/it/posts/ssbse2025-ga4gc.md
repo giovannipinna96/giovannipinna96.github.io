@@ -1,109 +1,106 @@
 ---
-title: "GA4GC: Agente Più Green per Codice Più Green"
+title: "A volte il tuo agente AI brucia più energia a ottimizzare il codice di quanta il codice ne risparmierà mai"
 date: 2025-10-13
 draft: false
 tags: ["Green AI", "Agenti di Codifica AI", "Ottimizzazione Multi-Obiettivo", "NSGA-II", "Sostenibilità"]
 categories: ["Ricerca"]
-description: "Utilizzo dell'ottimizzazione multi-obiettivo per configurare agenti di codifica AI per un funzionamento energeticamente efficiente, ottenendo fino al 37.7% di riduzione del runtime migliorando contemporaneamente la correttezza del codice."
+description: "Gli agenti AI che 'ottimizzano' il tuo codice possono costare più energia di quanta ne risparmino — per centinaia di migliaia di esecuzioni. Abbiamo tunato l'agente stesso, ottenendo run più veloci del 37,7% e codice migliore allo stesso tempo."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/ssbse2025-ga4gc/workflow.png"
+  alt: "GA4GC: NSGA-II tuna la configurazione di un agente di codifica AI"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-Gli agenti di codifica AI consumano risorse computazionali sostanziali — spesso oltre 100.000 token per esecuzione — eppure vengono distribuiti con configurazioni default che sono lontane dall'essere ottimali. GA4GC (Greener Agent for Greener Code) applica l'ottimizzazione multi-obiettivo NSGA-II per regolare sistematicamente le configurazioni degli agenti, bilanciando correttezza del codice, miglioramento delle prestazioni e tempo di esecuzione dell'agente. Valutato su un'architettura mini-SWE-agent alimentata da Gemini 2.5 Pro sul benchmark SWE-Perf, il framework ottiene fino al 37.7% di riduzione del runtime e un miglioramento dell'ipervolume di 135 volte rispetto alle impostazioni default, migliorando contemporaneamente la correttezza del codice. L'analisi Random Forest rivela che la temperatura è il parametro singolarmente più influente, e che gli iperparametri dell'LLM guidano principalmente l'efficacia del task mentre i vincoli dell'agente guidano principalmente il consumo di risorse — una separazione che consente la regolazione indipendente di qualità ed efficienza. Pubblicato a SSBSE 2025, Challenge Track on Green SBSE.
+{{< summary-box title="TL;DR" >}}
+Gli agenti di codifica AI bruciano più di 100.000 token per task. Quando il task è "ottimizza le performance di questo codice", l'agente in sé spesso costa più energia di quanta il codice ottimizzato ne risparmierà mai. Abbiamo costruito **GA4GC** — Greener Agent for Greener Code — usando **NSGA-II** per tunare la configurazione dell'agente contro tre obiettivi: correttezza del codice, speedup del codice e *runtime dell'agente*. Su un mini-SWE-agent alimentato da Gemini 2.5 Pro sul benchmark SWE-Perf, abbiamo ottenuto una **riduzione del runtime del 37,7%** migliorando *anche* la correttezza, con un **miglioramento dell'hypervolume di 135×** rispetto ai default. Bonus: la temperatura è la singola manopola più importante, e gli iperparametri dell'LLM controllano la qualità mentre i vincoli dell'agente controllano il costo — possono essere tunati quasi indipendentemente.
 {{< /summary-box >}}
 
-## Introduzione
+## Il paradosso energetico di cui nessuno parla
 
-Gli agenti di codifica AI — strumenti come GitHub Copilot, Claude Code, Devin e OpenAI Codex — rappresentano un'evoluzione significativa rispetto al semplice completamento del codice. Questi sistemi operano attraverso pipeline di ragionamento complesse e multi-step: analizzano la struttura del repository, pianificano soluzioni, generano codice, lo eseguono in ambienti sandbox, diagnosticano i fallimenti e iterano attraverso multipli cicli di raffinamento. Possono affrontare task di ingegneria del software reali che nessuna singola chiamata LLM potrebbe gestire.
+Ecco una cosa che dovrebbe essere ovvia ma non lo è: quando chiedi a un agente AI di *ottimizzare le performance del tuo codice*, l'esecuzione dell'agente stesso costa energia. Tanta energia. Spesso più di quanta il codice che sta ottimizzando ne risparmierà mai.
 
-Ma questa potenza ha un costo sostanziale. Una singola esecuzione di un agente su un task di ingegneria del software moderatamente complesso può consumare oltre **100.000 token**, traducendosi in spese monetarie e consumo energetico significativi. E qui risiede un paradosso critico: quando un agente AI è incaricato di *ottimizzare le prestazioni del codice*, l'energia consumata dall'agente stesso durante il processo di ottimizzazione può superare vastamente l'energia risparmiata dai miglioramenti del codice risultanti. Senza un'attenta regolazione della configurazione, un agente potrebbe dover produrre codice che viene eseguito **centinaia di migliaia di volte** prima che il risparmio energetico compensi il costo dell'ottimizzazione. Alcune "ottimizzazioni" sono in realtà una perdita netta di energia.
+Pensa al conto. L'agente legge file, pianifica, genera codice, esegue test, debugga, itera. Una run reale su una repo non banale divora token a sei cifre. Ora immagina che limi 50ms da una funzione. Quante volte deve essere eseguita quella funzione perché si rientri dell'energia spesa per renderla più veloce?
 
-Questo articolo, presentato a **SSBSE 2025** (il 17° Symposium on Search-Based Software Engineering) come parte del Challenge Track on Green SBSE, introduce **GA4GC** (Greener Agent for Greener Code) — un framework che applica l'ottimizzazione multi-obiettivo per trovare configurazioni degli agenti che bilancino efficacia ed efficienza delle risorse.
+Per alcuni task: centinaia di migliaia di esecuzioni. Per altri: mai. **Alcune "ottimizzazioni" sono perdite energetiche nette.**
 
-## Il Problema dello Spazio di Configurazione
+È una cosa inquietante da scoprire mentre ti dicono che l'AI renderà il software più efficiente.
 
-Un agente di codifica AI ha uno spazio di configurazione sorprendentemente ampio. I parametri chiave includono:
+## Perché i default dell'agente sono un cattivo punto di partenza
 
-- **Temperatura dell'LLM**: Controlla la casualità della generazione del testo (0 = deterministico, più alto = più creativo/casuale)
-- **Campionamento top_p**: Un altro parametro di controllo della diversità che limita la selezione dei token alle opzioni più probabili
-- **Limiti massimi di token**: Quanti token l'agente può generare per step
-- **Limiti di step**: Quanti cicli ragionamento-azione l'agente può eseguire
-- **Varianti del template di prompt**: Diverse istruzioni e prompt di sistema che modellano il comportamento dell'agente
+Gli agenti di codifica AI hanno spazi di configurazione sorprendentemente grandi. Temperatura. Top_p. Token massimi per step. Numero massimo di step. Varianti del prompt template. Queste manopole interagiscono, spesso in modo controintuitivo. Una temperatura più alta può aiutare su task creativi e sprecare budget su quelli semplici. Limiti di step lasco danno all'agente spazio per iterare ma anche per vagare.
 
-Ogni parametro influenza sia la qualità dell'output dell'agente sia il suo consumo di risorse. Le interazioni tra parametri sono complesse e spesso controintuitive — una temperatura più alta potrebbe migliorare la qualità del codice su task creativi ma sprecare risorse su task semplici. Lo spazio di configurazione combinato è troppo grande per un'esplorazione manuale efficace.
+I default che vengono shippati con questi agenti sono scelti da umani per medie ragionevoli all'apparenza. Non sono scelti per il *tuo* task, la *tua* codebase, il *tuo* budget energetico. La maggior parte è visibilmente subottimale appena cominci a misurare.
 
-## Come Funziona GA4GC
+Quindi ci siamo chiesti: e se trattassimo la configurazione dell'agente come un *problema di ricerca*?
 
-### L'Architettura dell'Agente
+## GA4GC: un loop di ricerca sopra l'agente
 
-GA4GC opera su un'architettura **mini-SWE-agent** alimentata da **Gemini 2.5 Pro** come LLM backbone. L'agente segue il flusso di lavoro standard SWE-agent: lettura dei file del repository, pianificazione delle modifiche, generazione di patch, esecuzione dei test e iterazione sui fallimenti. Questa architettura rappresenta uno scenario di deployment realistico per gli agenti di codifica AI nella pratica.
+Il setup è semplice in spirito, complicato nella pratica.
 
-### Il Framework di Ottimizzazione
+![Pipeline GA4GC: NSGA-II evolve le configurazioni dell'agente, valutate su SWE-Perf](/images/ssbse2025-ga4gc/workflow.png)
 
-GA4GC inquadra la regolazione della configurazione come un **problema di ottimizzazione multi-obiettivo** e lo risolve usando **NSGA-II** (Non-dominated Sorting Genetic Algorithm II). I tre obiettivi in competizione sono:
+Abbiamo preso un **mini-SWE-agent** che gira su **Gemini 2.5 Pro** e abbiamo lasciato che **NSGA-II** — un algoritmo evolutivo multi-obiettivo — facesse evolvere la sua configurazione. NSGA-II non cerca di trovare una singola configurazione migliore. Mappa una **frontiera di Pareto**: una frontiera di configurazioni dove non puoi migliorare un obiettivo senza sacrificarne un altro.
 
-1. **Minimizzare le patch errate**: Massimizzare la probabilità che l'agente produca codice corretto e funzionale
-2. **Massimizzare il miglioramento delle prestazioni del codice**: Assicurare che il codice ottimizzato venga effettivamente eseguito più velocemente — questo è lo scopo primario del task di ottimizzazione
-3. **Minimizzare il tempo di esecuzione dell'agente**: Ridurre le risorse computazionali (tempo, token, energia) consumate dall'agente stesso
+Tre obiettivi:
 
-Lo spazio di ricerca è eterogeneo: parametri continui (temperatura, top_p), vincoli interi (token massimi, limiti di step) e variabili categoriche (template di prompt). NSGA-II è particolarmente adatto per questo tipo di problema a variabili miste, applicando operatori di crossover e mutazione appropriati per ogni tipo di parametro.
+1. **Minimizza le patch sbagliate.** Codice corretto prima di tutto, sempre.
+2. **Massimizza il guadagno di performance.** Tutto il punto del task è rendere più veloce il codice target.
+3. **Minimizza il runtime dell'agente.** Non lasciare che l'ottimizzatore costi più di quanto valga l'ottimizzazione.
 
-### Valutazione su SWE-Perf
+L'agente gira su **SWE-Perf**, un benchmark di task reali di tuning delle performance dalla libreria Python **astropy**. Ogni configurazione candidata viene valutata in un ambiente Docker isolato per riproducibilità.
 
-Ogni configurazione candidata viene valutata su task dal **benchmark SWE-Perf**, che fornisce task autentici di ottimizzazione delle prestazioni a livello di repository dal progetto **astropy** (una libreria Python ampiamente utilizzata per l'astronomia). L'agente genera patch che vengono validate in **ambienti Docker isolati**, garantendo misurazioni riproducibili sia della correttezza del codice sia dei guadagni di prestazione.
+NSGA-II gestisce lo spazio di configurazione eterogeneo — manopole continue (temperatura, top_p), vincoli interi (token massimi, limiti di step), scelte categoriche (prompt template) — applicando gli operatori giusti a ciascuna.
 
-### Processo Evolutivo
+## Cosa abbiamo trovato in 25 valutazioni
 
-Partendo da una popolazione di configurazioni casuali, NSGA-II evolve soluzioni migliori su più generazioni. Attraverso selezione, crossover e mutazione, l'algoritmo converge verso un **fronte di Pareto** di configurazioni non dominate — soluzioni in cui migliorare un obiettivo peggiora necessariamente un altro. Questo fronte di Pareto offre ai professionisti un menù di opzioni di trade-off tra cui scegliere.
+Sì, 25. È l'intero budget. Il punto di GA4GC non è essere costoso — è essere più economico dell'alternativa di non fare nulla.
 
-## Risultati Chiave
+Le configurazioni non-dominate hanno ottenuto:
 
-Con un budget vincolato di sole **25 valutazioni di configurazione**, GA4GC ha ottenuto risultati notevoli:
+- **Riduzione del runtime del 37,7%.** Configurazione di default: 1.513 secondi. Migliore configurazione di Pareto: 943 secondi.
+- **Anche correttezza migliore.** Non un trade-off — proprio meglio.
+- **Miglioramento dell'hypervolume di 135×** rispetto alla baseline di default. (L'hypervolume misura quanta parte dello spazio degli obiettivi copre la frontiera di Pareto — più grande è meglio.)
 
-### Guadagni di Efficienza
+Il titolo: **i default non sono solo subottimali, sono pesantemente subottimali**. Guadagni significativi *sia* in qualità *che* in efficienza sono lì che aspettano chiunque esegua anche solo un piccolo loop di tuning.
 
-Le configurazioni non dominate hanno raggiunto fino al **37.7% di riduzione del runtime** (943 secondi vs. 1.513 secondi per la configurazione default) migliorando *contemporaneamente* la correttezza del codice. Il **miglioramento dell'ipervolume** ha raggiunto fino a **135 volte** rispetto al baseline default.
+## La scoperta strutturale che ci ha sorpresi
 
-Questa è una scoperta critica: significa che le configurazioni default fornite con gli agenti di codifica AI sono lontane dall'essere ottimali. Miglioramenti significativi in termini sia di qualità che di efficienza sono disponibili attraverso una regolazione sistematica.
+Abbiamo eseguito una regressione Random Forest per capire quali manopole contano davvero. Due cose sono saltate fuori.
 
-### Analisi dell'Importanza dei Parametri
+**La temperatura domina.** Tra tutte le manopole, la temperatura è la singola più importante. Ha un senso intuitivo — modella tutto lo stile esplorativo dell'agente — ma la *magnitudine* della sua influenza era più grande di quanto ci aspettassimo.
 
-Usando l'**analisi di regressione Random Forest**, abbiamo identificato quali parametri contano di più:
+**Gli iperparametri dell'LLM guidano la qualità. I vincoli dell'agente guidano il costo. Sono disaccoppiati.**
 
-**La temperatura è il parametro più influente in assoluto.** Questo ha senso intuitivo: la temperatura controlla la casualità fondamentale degli output dell'LLM, influenzando tutto, dalla creatività del codice all'ampiezza dell'esplorazione. Piccoli cambiamenti di temperatura possono alterare drasticamente il comportamento dell'agente.
+Questa è la scoperta azionabile. Se tuni temperatura e top_p, stai muovendo la manopola di se l'agente produce codice buono. Se tuni i limiti di token e di step, stai muovendo la manopola di quanto ti costa. Le due superfici di controllo non si combattono molto. **Puoi ottimizzare qualità e costo quasi indipendentemente** — il che, metodologicamente, è ottima notizia.
 
-L'analisi ha rivelato una scoperta strutturale importante — **due categorie di parametri svolgono ruoli diversi**:
+## Tre ricette di deployment
 
-- **Iperparametri dell'LLM** (temperatura, top_p) impattano principalmente sull'**efficacia del task** — se l'agente produce codice corretto e performante
-- **Vincoli dell'agente** (limiti di token, conteggio degli step) impattano principalmente sul **consumo di risorse** — quanto tempo e computazione l'agente utilizza
+La frontiera di Pareto non è una risposta singola; è un menu. Tre punti utili:
 
-Questa separazione è altamente azionabile: i professionisti possono regolare il consumo di risorse senza necessariamente influenzare la qualità del codice, e viceversa. Significa che i miglioramenti dell'efficienza e i miglioramenti della qualità possono spesso essere perseguiti in modo indipendente.
+**Runtime-critical.** Temperatura bassa, top_p restrittivo. Meno creativo, più veloce, economico. Usalo quando ti servono risposte velocemente su task relativamente semplici.
 
-## Strategie Pratiche di Deployment
+**Performance-critical.** Temperatura moderata (0,65–0,73), top_p bilanciato. L'agente ha spazio per trovare davvero soluzioni migliori, al costo di più compute. Usalo quando lo speedup che stai cercando di estrarre vale più del runtime dell'agente.
 
-GA4GC traduce i risultati dell'ottimizzazione in tre scenari concreti di deployment:
+**Context-specific.** Esegui GA4GC sulla tua codebase e distribuzione di task. Otterrai una frontiera di Pareto cucita sul tuo ambiente, che batte qualunque ricetta generica.
 
-### 1. Ambienti Runtime-Critical
+## Perché è più di un trucco di benchmark
 
-Usare **temperatura bassa** con **top_p restrittivo**. L'agente genera codice meno diversificato ma più veloce, completando i task con un overhead computazionale minimo. Ideale quando il tempo di completamento è la priorità e i task sono relativamente semplici.
+Mentre gli agenti di codifica AI passano da demo cool a infrastruttura standard, la loro impronta cumulativa di compute diventa una vera questione di sostenibilità. Un'organizzazione che esegue centinaia di task con agenti al giorno sta spendendo soldi seri ed energia seria. La maggior parte è prevenibile.
 
-### 2. Scenari Performance-Critical
+La lezione qui è che **il tuning della configurazione è una leva di sostenibilità**, non solo di performance. Non ti serve un modello più piccolo o hardware speciale per rendere il tuo tooling AI più green — ti serve smettere di accettare default che nessuno ha scelto per la *tua* situazione.
 
-Usare **temperatura moderata** (0.65–0.73) con **top_p bilanciato**. Questo dà all'agente sufficiente libertà esplorativa per scoprire soluzioni genuinamente migliori, al costo di un maggiore consumo di risorse. Appropriato quando i guadagni di prestazione del codice giustificano il runtime aggiuntivo dell'agente.
-
-### 3. Ottimizzazione Context-Specific
-
-Eseguire GA4GC stesso sul proprio specifico codebase e distribuzione di task. Il fronte di Pareto che scopre sarà personalizzato per le vostre particolari esigenze, fornendo i migliori trade-off possibili per il vostro ambiente. Questo rappresenta l'approccio più rigoroso per le organizzazioni in cui l'uso degli agenti è frequente e l'ottimizzazione conta.
-
-## Perché Questo È Importante
-
-Man mano che gli agenti di codifica AI passano da strumenti sperimentali a infrastruttura di sviluppo standard, la loro impronta computazionale cumulativa diventa una preoccupazione di sostenibilità. Un'organizzazione che esegue centinaia di task di agenti al giorno genera costi energetici significativi — sia finanziariamente che ambientalmente.
-
-GA4GC dimostra che la **regolazione della configurazione è una leva di sostenibilità** che complementa gli approcci tradizionali come i miglioramenti dell'architettura dei modelli o l'ottimizzazione hardware. Anziché accettare le configurazioni default e assorbire il costo, i professionisti possono scoprire sistematicamente configurazioni che offrono le prestazioni necessarie minimizzando gli sprechi.
-
-Il framework fornisce un template metodologico per il deployment responsabile dell'AI nell'ingegneria del software: misurare, ottimizzare e deployare con consapevolezza del quadro completo costi-benefici.
+Se stai mettendo in produzione agenti AI, esegui un piccolo loop NSGA-II sul tuo spazio di configurazione prima di scalare. L'energia che risparmierai sarà la sua ricompensa, e la correttezza migliore che otterrai è un effetto collaterale gratuito.
 
 ---
 
-*Pubblicato al 17° Symposium on Search-Based Software Engineering (SSBSE 2025), Challenge Track on Green SBSE. Questa ricerca è stata condotta presso la University College London (UCL) e l'Università degli Studi di Trieste. Codice e risultati sono pubblicamente disponibili.*
+### Reference
+
+Questo post è una sintesi divulgativa di:
+
+> Pinna, G., Sarro, F. (2025). *GA4GC: Greener Agent for Greener Code*. In: **Proceedings of the 17th Symposium on Search-Based Software Engineering (SSBSE 2025)** — Challenge Track on Green SBSE.
+>
+> [Leggi il paper originale (PDF)](/images/ssbse2025-ga4gc/SSBSE__25_Challenge__GA4GC__Blue_.pdf)
+
+*Ricerca condotta presso la University College London (UCL) e l'Università degli Studi di Trieste.*

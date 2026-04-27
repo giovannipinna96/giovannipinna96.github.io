@@ -1,111 +1,106 @@
 ---
-title: "Analisi dell'Inconsistenza Messaggio-Codice nelle Pull Request degli Agenti di Codifica AI"
+title: "Quando gli agenti AI mentono sul proprio codice (senza volerlo)"
 date: 2026-04-14
 draft: false
 tags: ["Agenti di Codifica AI", "Pull Request", "Inconsistenza Messaggio-Codice", "Fiducia", "MSR"]
 categories: ["Ricerca"]
-description: "Un'analisi su larga scala di 23.247 pull request generate da AI che rivela come l'inconsistenza messaggio-codice — quando le descrizioni delle PR non corrispondono alle modifiche effettive — porti a tassi di accettazione inferiori del 51.7% e tempi di merge 3.5 volte più lunghi."
+description: "Solo l'1,7% delle pull request scritte da agenti AI ha descrizioni che non corrispondono al codice. Quelle PR vengono accettate il 51,7% in meno e impiegano 3,5× di tempo per il merge. La fiducia è il collo di bottiglia che nessuno sta misurando."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/msr2026-message-code-inconsistency/workflow.png"
+  alt: "Pipeline per l'analisi dell'inconsistenza messaggio-codice in PR generate da AI"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-Gli agenti di codifica AI generano sia codice che descrizioni delle pull request, ma questi due output possono divergere: il codice può essere corretto mentre la descrizione non riflette accuratamente le modifiche effettive. Studiamo questo fenomeno di inconsistenza messaggio-codice (MCI) su 23.247 pull request create da AI, trovando che l'1.7% mostra alta inconsistenza tra la descrizione e il diff del codice. Nonostante la bassa prevalenza, l'impatto è drammatico: le PR inconsistenti presentano tassi di accettazione inferiori del 51.7% e tempi di merge 3.5 volte più lunghi rispetto a quelle consistenti — anche quando le modifiche al codice sottostanti sono tecnicamente valide. Questo accade perché le descrizioni fuorvianti erodono la fiducia dei reviewer e impongono un costoso riorientamento durante il processo di revisione. I nostri risultati evidenziano che valutare gli agenti AI solo sulla qualità del codice fornisce un quadro incompleto; l'accuratezza dei loro artefatti di comunicazione è altrettanto critica per l'utilità pratica. Pubblicato a MSR 2026, Mining Challenge.
+{{< summary-box title="TL;DR" >}}
+Abbiamo analizzato **23.247 pull request** scritte da agenti di codifica AI e fatto una domanda semplice: la descrizione corrisponde al diff? Nell'**1,7%** dei casi, no. Sembra poco — finché non vedi le conseguenze. Le PR inconsistenti hanno un **tasso di accettazione inferiore del 51,7%** e impiegano **3,5× di tempo** per essere mergiate. Il codice è a posto. Il problema è la storia che l'agente racconta sul codice.
 {{< /summary-box >}}
 
-## Introduzione
+## La parte di una PR che nessuno misura
 
-Quando valutiamo gli agenti di codifica AI, la nostra attenzione gravita naturalmente verso la qualità del codice. Il codice generato compila? Supera i test? È ben strutturato e manutenibile? Queste sono domande importanti, ma catturano solo parte di ciò che rende una pull request di successo.
+Quando facciamo benchmark sugli agenti di codifica AI, misuriamo il codice. Compila? Passa i test? È pulito?
 
-Nello sviluppo software professionale, una pull request non è semplicemente un diff di codice — è un **artefatto di comunicazione**. Include una descrizione che spiega quali modifiche sono state apportate, perché sono state fatte e quale impatto si prevede abbiano. I reviewer si affidano fortemente a queste descrizioni come primo punto di accesso per comprendere un contributo. Prima di leggere una singola riga di codice, la maggior parte dei reviewer legge la descrizione della PR per formarsi un modello mentale di cosa aspettarsi.
+Ma una pull request non è un diff. È un *diff più una storia*. Il reviewer legge il titolo, poi la descrizione, poi forse il codice. La descrizione fissa le aspettative. Dice al reviewer cosa cercare. **Se la storia è sbagliata, ogni riga di codice che segue viene letta contro il template sbagliato.**
 
-Questo crea una dipendenza critica: **se la descrizione riflette accuratamente il codice, accelera la revisione; se non lo fa, fuorvia attivamente.** Una descrizione che afferma "corretto il bug di autenticazione nel flusso di login" ma che contiene in realtà un refactoring del livello di connessione al database manda il reviewer nella direzione sbagliata fin dall'inizio.
+Una PR intitolata "fixed the auth bug" che in realtà refactora il livello del database non solo fallisce a informare. Inganna attivamente. E quando i reviewer captano il mismatch — anche solo a livello inconscio — la fiducia crolla.
 
-Questo è il problema dell'**inconsistenza messaggio-codice (MCI)** — il disallineamento tra la descrizione in linguaggio naturale di una pull request e le modifiche al codice effettive che contiene. Questo articolo, pubblicato a **MSR 2026** (la 23ª Conferenza Internazionale su Mining Software Repositories), presenta il primo studio su larga scala di questo fenomeno nelle pull request create da AI.
+## Perché gli agenti sono stranamente cattivi in questo
 
-## Perché gli Agenti AI Sono Particolarmente Soggetti alla MCI
+Scrivere codice e scrivere un riassunto onesto di quello che hai appena scritto sono task cognitivi diversi. Il primo è algoritmico. Il secondo è *meta-cognitivo* — devi sapere cosa intendevi fare, cosa hai provato, e cosa è effettivamente uscito dall'altra parte.
 
-Gli agenti di codifica AI tipicamente generano sia il codice che le descrizioni delle PR usando lo stesso LLM backbone o uno simile. Ma scrivere codice corretto e scrivere descrizioni accurate sono compiti cognitivi fondamentalmente diversi.
+Gli agenti AI sono bravi nel primo. Faticano nel secondo, e il fallimento ha una forma precisa:
 
-Scrivere codice richiede **ragionamento algoritmico**: comprendere le specifiche del problema, scegliere un approccio appropriato, implementarlo con sintassi e semantica corrette, e gestire i casi limite. Scrivere una descrizione accurata richiede **consapevolezza meta-cognitiva**: comprendere la *relazione* tra ciò che era stato inteso, ciò che è stato tentato e ciò che è stato effettivamente raggiunto.
+1. L'agente legge il task e formula un piano.
+2. Incontra attriti inattesi — test che falliscono, dipendenze strane, edge case.
+3. Itera, debugga, fa deviazioni, scende a compromessi.
+4. Il codice finale non è esattamente quello che il piano prevedeva.
+5. Quando gli viene chiesto di scrivere una descrizione, l'agente spesso descrive **il piano, non il risultato**.
 
-L'inconsistenza spesso nasce da una specifica modalità di fallimento nel comportamento dell'agente. Durante l'esecuzione, il piano di un agente può divergere dalla sua effettiva implementazione. L'agente potrebbe:
+Da lì nasce l'inconsistenza messaggio-codice. Non malizia. Non pigrizia. Una deriva tra intento e risultato che l'agente non ha mai notato.
 
-1. Partire con un piano chiaro basato sulla descrizione del task
-2. Incontrare difficoltà inaspettate durante l'implementazione (test falliti, errori di compilazione, problemi di dipendenze)
-3. Iterare attraverso molteplici cicli di debugging e modifica del codice
-4. Arrivare a una soluzione finale che differisce dal piano originale
+![Pipeline per misurare l'inconsistenza messaggio-codice nelle PR generate da AI](/images/msr2026-message-code-inconsistency/workflow.png)
 
-Quando l'agente poi genera la descrizione della PR, potrebbe descrivere **ciò che intendeva fare** (basato sul piano iniziale) piuttosto che **ciò che ha effettivamente fatto** (l'esito del processo implementativo complesso e talvolta tortuoso). La descrizione riflette il piano; il codice riflette l'esito — e questi possono divergere significativamente.
+## Come l'abbiamo misurata
 
-## Progettazione dello Studio
+Abbiamo costruito una metrica — **PR-MCI**, Pull Request Message-Code Inconsistency — che misura la distanza semantica tra quello che dice la descrizione e quello che il diff effettivamente fa. È un punteggio continuo, non sì/no, così possiamo classificare le PR per *quanto* sono inconsistenti.
 
-### Scala e Ambito
+Poi l'abbiamo applicata a 23.247 pull request scritte da agenti AI e abbiamo guardato cosa succedeva a quelle inconsistenti.
 
-Abbiamo analizzato **23.247 pull request** create da agenti di codifica AI, misurando il grado di inconsistenza tra la descrizione di ogni PR e le sue effettive modifiche al codice. Questo è, per quanto ne sappiamo, il più grande studio sulla consistenza messaggio-codice nei contributi generati da AI.
+## Il problema dell'1,7%
 
-### La Metrica PR-MCI
+Solo l'**1,7%** delle PR ha ottenuto un punteggio di alta inconsistenza. Sembra un non-problema. Non lo è, per due motivi.
 
-Abbiamo sviluppato una metrica chiamata **PR-MCI (Pull Request Message-Code Inconsistency)** per quantificare il divario di allineamento. PR-MCI misura la distanza semantica tra ciò che la descrizione della PR afferma e ciò che il diff del codice effettivamente fa, producendo un punteggio continuo che cattura il grado di disallineamento.
+Primo, la scala. In un'azienda che spedisce migliaia di PR generate da agenti al mese, l'1,7% sono decine di descrizioni fuorvianti che ogni settimana atterrano nelle inbox dei reviewer.
 
-### Prevalenza dell'Inconsistenza
+Secondo, *ognuna è costosa*.
 
-La nostra analisi ha trovato che l'**1.7% delle pull request create da AI mostrava alta inconsistenza messaggio-codice**. Sebbene questo numero possa apparire piccolo in isolamento, due fattori lo rendono significativo:
+![Impatto su tasso di accettazione e tempo di merge per fascia di consistenza](/images/msr2026-message-code-inconsistency/figure_rq2_category_combined.png)
 
-1. **A scala, l'1.7% rappresenta un numero assoluto sostanziale.** In un'organizzazione grande che genera migliaia di PR create da AI al mese, questo si traduce in decine di descrizioni fuorvianti che entrano regolarmente nella pipeline di revisione.
+Le PR ad alta inconsistenza:
 
-2. **L'impatto di ogni PR inconsistente è sproporzionatamente grande**, come la nostra analisi degli esiti dimostra.
+- Vengono accettate il **51,7% in meno** rispetto alle PR consistenti
+- Impiegano **3,5× di tempo** per il merge quando vengono accettate
+- Spesso hanno codice tecnicamente *valido* — il rifiuto riguarda la storia, non la sostanza
 
-## L'Impatto dell'Inconsistenza
+Un reviewer che scopre che la descrizione gli ha mentito non concede il beneficio del dubbio all'agente sul paragrafo successivo, né sul file successivo, né sulla PR successiva. **La fiducia si paga in anticipo e si recupera lentamente.**
 
-Le pull request con punteggi MCI alti hanno mostrato esiti drammaticamente peggiori su due dimensioni chiave:
+## Perché il costo è così alto
 
-### Tassi di Accettazione
+Due meccanismi si compongono:
 
-Le PR con alta inconsistenza messaggio-codice avevano **tassi di accettazione inferiori del 51.7%** rispetto alle PR con descrizioni consistenti. Questa è una scoperta impressionante: anche quando le modifiche al codice stesse potrebbero essere perfettamente accettabili, una descrizione fuorviante porta i reviewer a rifiutare il contributo.
+**Costo di ri-orientamento.** Un reviewer che si aspettava fix all'autenticazione e trova refactoring del database deve buttare via il modello mentale e costruirne uno nuovo. È l'operazione più costosa in code review. Tende anche a far emergere istinti difensivi: "cos'altro c'è qui dentro che non mi aspettavo?"
 
-Questo accade per diverse ragioni. Quando i reviewer rilevano che una descrizione non corrisponde al codice, perdono fiducia nell'intero contributo. Se l'agente non riesce a descrivere accuratamente le proprie modifiche, quanto può essere sicuro il reviewer che il codice sia corretto? L'inconsistenza della descrizione funge da **segnale negativo sulla qualità complessiva**, anche quando il codice in sé è corretto.
+**Contagio della fiducia.** Se la descrizione è sbagliata, il reviewer smette di considerarla un *riassunto* — il che significa che deve leggere il codice con più attenzione di quanta ne avrebbe altrimenti. Ogni PR successiva alla prima inconsistente eredita un piccolo sconto sulla fiducia, soprattutto se viene dallo stesso agente.
 
-Inoltre, le descrizioni inconsistenti rendono molto più difficile per i reviewer valutare il codice. Un reviewer che si aspetta di vedere correzioni di autenticazione ma trova refactoring del database deve riorientare interamente il proprio modello mentale — un'esperienza cognitivamente costosa e frustrante che porta naturalmente a tassi di rifiuto più alti.
+Il risultato finale: una piccola percentuale di PR fuorvianti degrada il throughput dell'intera pipeline di review.
 
-### Tempo di Merge
+## Cosa fare
 
-Le PR con punteggi MCI alti impiegavano **3.5 volte più tempo per il merge** rispetto alle PR consistenti. Questo collo di bottiglia nasce perché le descrizioni inconsistenti costringono i reviewer a fare fondamentalmente più lavoro:
+Per chi sviluppa agenti, il fix è strutturale. La descrizione non dovrebbe essere generata dal *piano*. Dovrebbe essere generata dal *diff finale*, in un passaggio separato, da qualcosa che non ha visto il task originale. Interventi economici che già aiutano:
 
-- Anziché essere guidati da un riassunto accurato, i reviewer devono leggere l'intero diff del codice riga per riga
-- Devono costruire la propria comprensione di cosa fanno le modifiche, piuttosto che verificare una spiegazione fornita
-- Possono essere necessari ulteriori cicli di revisione per chiarire le discrepanze tra la descrizione e il codice
+- **Pass di verifica.** Una seconda chiamata LLM legge diff e descrizione e segnala il mismatch.
+- **Controlli euristici.** I file menzionati nella descrizione dovrebbero comparire nel diff. Le categorie di bug citate dovrebbero corrispondere ai test che vengono toccati.
+- **Rigenerazione della descrizione.** Butta via la descrizione che l'agente ha scritto in fase di pianificazione. Generane una nuova solo dal diff finale.
 
-Complessivamente, questi ritardi creano attrito significativo nella pipeline di sviluppo. Quando ci si aspetta che gli agenti AI accelerino lo sviluppo, produrre PR che rallentano il processo di revisione mina direttamente la loro proposta di valore.
+Per i team che usano questi agenti: assumi che le descrizioni siano inaffidabili finché non si dimostra il contrario. Costruisci l'abitudine di scorrere prima il diff, poi la descrizione.
 
-## Implicazioni
+Per il campo: smettete di valutare gli agenti solo sul codice. **Una pull request è un deliverable, e la descrizione è parte del deliverable.** Un agente che scrive codice corretto con una PR fuorviante non è un buon agente — è un modo veloce per distruggere la fiducia dei reviewer.
 
-### Per gli Sviluppatori di Agenti AI
+## La storia vera
 
-I risultati presentano un caso forte per investire in **meccanismi di verifica della descrizione**. Gli sviluppatori di agenti dovrebbero implementare un passo di validazione separato che verifichi se la descrizione generata della PR riflette accuratamente le modifiche effettive al codice. Questo potrebbe assumere diverse forme:
+Man mano che gli agenti diventano meno assistenti e più collaboratori autonomi, il collo di bottiglia si sposta. Non è se sanno scrivere codice. Sanno. La domanda è se ci si possa fidare che *descrivano cosa hanno scritto*.
 
-- **Passaggio LLM secondario**: Un modello separato legge sia il diff del codice che la descrizione generata, segnalando le inconsistenze
-- **Controlli euristici**: Regole leggere che verificano l'allineamento di base (ad esempio, i file menzionati nella descrizione appaiono effettivamente nel diff)
-- **Rigenerazione della descrizione post-generazione**: Anziché usare la descrizione generata durante la fase di pianificazione, rigenerare la descrizione dal diff del codice finale
-
-### Per i Team di Sviluppo
-
-I team che utilizzano agenti di codifica AI dovrebbero calibrare i processi di revisione per tenere conto della potenziale inaffidabilità delle descrizioni. Nei codebase ad alto rischio, questo potrebbe significare:
-
-- Sviluppare l'abitudine sistematica di verificare le descrizioni delle PR contro le effettive modifiche al codice prima di iniziare la revisione dettagliata
-- Implementare strumenti automatizzati che segnalino potenziali discrepanze descrizione-codice
-- Considerare la generazione indipendente delle descrizioni attraverso un processo separato
-
-### Per i Ricercatori
-
-Questo studio evidenzia che valutare gli agenti di codifica AI solo sulla qualità del codice fornisce un quadro incompleto. Il pacchetto deliverable completo include codice, messaggi di commit, descrizioni delle PR e documentazione. L'inconsistenza in qualsiasi di questi componenti può minare l'utilità pratica del lavoro dell'agente. I futuri framework di valutazione dovrebbero valutare questi artefatti in modo olistico.
-
-## La Dimensione della Fiducia
-
-Man mano che gli agenti di codifica AI passano da assistenti a contributori sempre più autonomi, la **fiducia** diventa una preoccupazione centrale. La fiducia nello sviluppo software non si costruisce esclusivamente sulla correttezza del codice — richiede trasparenza e comunicazione onesta su quali modifiche vengono apportate e perché.
-
-I nostri risultati rivelano che gli agenti attuali hanno margini significativi di miglioramento su questa dimensione. Il codice può essere tecnicamente corretto, ma la narrativa che costruiscono sul proprio lavoro non è sempre affidabile. Affrontare l'inconsistenza messaggio-codice è un passo importante verso agenti AI di cui i team di sviluppo possono fidarsi — non solo per scrivere buon codice, ma per comunicare in modo chiaro e onesto su ciò che hanno fatto.
+Al momento, sull'1,7% dei tentativi, non si può. E quell'1,7% sta facendo più danni alla relazione tra umani e agenti di quanti ne abbia mai fatto un compile error.
 
 ---
 
-*Pubblicato alla 23ª Conferenza Internazionale su Mining Software Repositories (MSR 2026) — Mining Challenge. Questa ricerca è stata condotta presso la University College London (UCL) e il King's College London.*
+### Reference
+
+Questo post è una sintesi divulgativa di:
+
+> Pinna, G., Sarro, F., Sutton, C. (2026). *Analyzing Message-Code Inconsistency in AI Coding Agent-Authored Pull Requests*. In: **Proceedings of the 23rd International Conference on Mining Software Repositories (MSR 2026)** — Mining Challenge Track.
+>
+> [Leggi il paper originale (PDF)](/images/msr2026-message-code-inconsistency/MSR_Challenge_2026_Message_Code_Inconsistency.pdf)
+
+*Ricerca condotta presso la University College London (UCL) e il King's College London.*

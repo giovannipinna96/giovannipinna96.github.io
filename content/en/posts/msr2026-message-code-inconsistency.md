@@ -1,111 +1,106 @@
 ---
-title: "Analyzing Message-Code Inconsistency in AI Coding Agent-Authored Pull Requests"
+title: "When AI Agents Lie About Their Own Code (Without Meaning To)"
 date: 2026-04-14
 draft: false
 tags: ["AI Coding Agents", "Pull Requests", "Message-Code Inconsistency", "Trust", "MSR"]
 categories: ["Research"]
-description: "A large-scale analysis of 23,247 AI-authored pull requests revealing that message-code inconsistency — when PR descriptions don't match actual code changes — leads to 51.7% lower acceptance rates and 3.5× longer merge times."
+description: "Only 1.7% of AI-authored pull requests have descriptions that don't match their code. Those PRs get accepted 51.7% less often and take 3.5× longer to merge. Trust is the bottleneck nobody is measuring."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/msr2026-message-code-inconsistency/workflow.png"
+  alt: "Workflow of message-code inconsistency analysis on AI-authored pull requests"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-AI coding agents generate both code and pull request descriptions, but these two outputs can diverge: the code may be correct while the description inaccurately reflects the actual changes. We study this message-code inconsistency (MCI) phenomenon across 23,247 AI-authored pull requests, finding that 1.7% exhibit high inconsistency between their description and their code diff. Despite the low prevalence, the impact is dramatic: inconsistent PRs experience 51.7% lower acceptance rates and 3.5 times longer merge times compared to consistent ones — even when the underlying code changes are technically sound. This occurs because misleading descriptions erode reviewer trust and force costly re-orientation during the review process. Our findings highlight that evaluating AI agents on code quality alone provides an incomplete picture; the accuracy of their communication artifacts is equally critical for practical utility. Published at MSR 2026, Mining Challenge.
+{{< summary-box title="TL;DR" >}}
+We looked at **23,247 pull requests** written by AI coding agents and asked a simple question: does the description match the diff? In **1.7%** of cases, no. Sounds tiny — until you see the consequences. Inconsistent PRs get **51.7% lower acceptance rates** and take **3.5× longer to merge**. The code is fine. The story the agent tells about the code is the problem.
 {{< /summary-box >}}
 
-## Introduction
+## The part of a PR nobody measures
 
-When we evaluate AI coding agents, our attention naturally gravitates toward code quality. Does the generated code compile? Does it pass tests? Is it well-structured and maintainable? These are important questions, but they capture only part of what makes a pull request successful.
+When we benchmark AI coding agents, we measure code. Does it compile? Does it pass the tests? Is it clean?
 
-In professional software development, a pull request is not just a code diff — it is a **communication artifact**. It includes a description explaining what changes were made, why they were made, and what impact they are expected to have. Reviewers rely heavily on these descriptions as their first point of entry into understanding a contribution. Before reading a single line of code, most reviewers read the PR description to form a mental model of what to expect.
+But a pull request is not a diff. It's a *diff plus a story*. The reviewer reads the title, then the description, then maybe the code. The description sets expectations. It tells the reviewer what to look for. **If the story is wrong, every line of code that follows is being read against the wrong template.**
 
-This creates a critical dependency: **if the description accurately reflects the code, it accelerates review; if it doesn't, it actively misleads.** A PR description claiming "fixed the authentication bug in the login flow" that actually contains a refactoring of the database connection layer sends the reviewer down the wrong path from the start.
+A PR titled "fixed the auth bug" that actually refactors the database layer doesn't just fail to inform. It actively misleads. And when reviewers detect that mismatch — even subconsciously — trust collapses.
 
-This is the problem of **message-code inconsistency (MCI)** — the misalignment between the natural language description of a pull request and the actual code changes it contains. This paper, published at **MSR 2026** (the 23rd International Conference on Mining Software Repositories), presents the first large-scale study of this phenomenon in AI-authored pull requests.
+## Why agents are weirdly bad at this
 
-## Why AI Agents Are Particularly Prone to MCI
+Writing code and writing an honest summary of what you just wrote are different cognitive tasks. The first is algorithmic. The second is *meta-cognitive* — you have to know what you intended, what you tried, and what actually came out the other end.
 
-AI coding agents typically generate both code and PR descriptions using the same or similar LLM backbone. But writing correct code and writing accurate descriptions are fundamentally different cognitive tasks.
+AI agents are good at the first. They struggle at the second, and the failure has a specific shape:
 
-Writing code requires **algorithmic reasoning**: understanding the problem specification, choosing an appropriate approach, implementing it with correct syntax and semantics, and handling edge cases. Writing an accurate description requires **meta-cognitive awareness**: understanding the *relationship* between what was intended, what was attempted, and what was ultimately achieved.
+1. The agent reads the task and forms a plan.
+2. It hits unexpected friction — failing tests, weird dependencies, edge cases.
+3. It iterates, debugs, takes detours, makes compromises.
+4. The final code is not quite what the plan was.
+5. When asked to write a description, the agent often describes **the plan, not the result**.
 
-The inconsistency often arises from a specific failure mode in agent behavior. During execution, an agent's plan may diverge from its actual implementation. The agent might:
+That's where message-code inconsistency is born. Not malice. Not laziness. A drift between intent and outcome that the agent never noticed.
 
-1. Start with a clear plan based on the task description
-2. Encounter unexpected difficulties during implementation (failing tests, compilation errors, dependency issues)
-3. Iterate through multiple debugging and code modification cycles
-4. Arrive at a final solution that differs from the original plan
+![Pipeline for measuring message-code inconsistency in AI-authored pull requests](/images/msr2026-message-code-inconsistency/workflow.png)
 
-When the agent then generates a PR description, it may describe **what it intended to do** (based on the initial plan) rather than **what it actually did** (the outcome of the complex, sometimes meandering implementation process). The description reflects the plan; the code reflects the outcome — and these can diverge significantly.
+## How we measured it
 
-## Study Design
+We built a metric — **PR-MCI**, Pull Request Message-Code Inconsistency — that measures the semantic distance between what the description says and what the diff actually does. It's a continuous score, not a yes/no, so we can rank PRs by *how* inconsistent they are.
 
-### Scale and Scope
+Then we ran it across 23,247 AI-authored pull requests and looked at what happened to the inconsistent ones.
 
-We analyzed **23,247 pull requests** authored by AI coding agents, measuring the degree of inconsistency between each PR's description and its actual code changes. This is, to our knowledge, the largest study of message-code consistency in AI-generated contributions.
+## The 1.7% problem
 
-### The PR-MCI Metric
+Only **1.7%** of PRs scored as highly inconsistent. That sounds like a non-issue. It's not, for two reasons.
 
-We developed a metric called **PR-MCI (Pull Request Message-Code Inconsistency)** to quantify the alignment gap. PR-MCI measures the semantic distance between what a PR description claims and what the code diff actually does, producing a continuous score that captures the degree of misalignment.
+First, scale. In a company shipping thousands of agent-authored PRs a month, 1.7% is dozens of misleading descriptions per week dropping into reviewer inboxes.
 
-### Prevalence of Inconsistency
+Second, *each one is expensive*.
 
-Our analysis found that **1.7% of AI-authored pull requests exhibited high message-code inconsistency**. While this number might appear small in isolation, two factors make it significant:
+![Acceptance rate and merge-time impact across consistency buckets](/images/msr2026-message-code-inconsistency/figure_rq2_category_combined.png)
 
-1. **At scale, 1.7% represents a substantial absolute number.** In a large organization generating thousands of AI-authored PRs per month, this translates to dozens of misleading descriptions entering the review pipeline regularly.
+The high-inconsistency PRs:
 
-2. **The impact of each inconsistent PR is disproportionately large**, as our outcome analysis demonstrates.
+- Get accepted **51.7% less often** than consistent PRs
+- Take **3.5× longer** to merge when they do get accepted
+- Often have technically *fine* code — the rejection is about the story, not the substance
 
-## The Impact of Inconsistency
+A reviewer who finds that the description lied to them does not give the agent the benefit of the doubt on the next paragraph, or the next file, or the next PR. **Trust is paid in advance and refunded slowly.**
 
-Pull requests with high MCI scores showed dramatically worse outcomes across two key dimensions:
+## Why the cost is so high
 
-### Acceptance Rates
+Two mechanisms compound:
 
-PRs with high message-code inconsistency had **51.7% lower acceptance rates** compared to PRs with consistent descriptions. This is a striking finding: even when the code changes themselves might be perfectly acceptable, a misleading description causes reviewers to reject the contribution.
+**Re-orientation cost.** A reviewer who expected auth fixes and found database refactors has to throw away their mental model and build a new one. That's the most expensive operation in code review. It also tends to surface defensive instincts: "what else is in here that I didn't expect?"
 
-This happens for several reasons. When reviewers detect that a description doesn't match the code, they lose trust in the entire contribution. If the agent can't accurately describe its own changes, how confident can the reviewer be that the code is correct? The description inconsistency serves as a **negative signal about overall quality**, even when the code itself is fine.
+**Trust contagion.** If the description is wrong, the reviewer no longer trusts the description as a *summary* — meaning they have to read the code more carefully than they would have. Every PR after the first inconsistent one inherits a slight discount on trust, especially if it came from the same agent.
 
-Additionally, inconsistent descriptions make it much harder for reviewers to evaluate the code. A reviewer who expects to see authentication fixes but finds database refactoring must re-orient their mental model entirely — a cognitively expensive and frustrating experience that naturally leads to higher rejection rates.
+The end result: a small percentage of misleading PRs degrades the throughput of the entire review pipeline.
 
-### Merge Time
+## What to do about it
 
-PRs with high MCI scores took **3.5 times longer to merge** compared to consistent PRs. This bottleneck arises because inconsistent descriptions force reviewers to do fundamentally more work:
+For agent developers, the fix is structural. The description should not be generated from the *plan*. It should be generated from the *final diff*, in a separate pass, by something that hasn't seen the original task. Cheap interventions that already help:
 
-- Instead of being guided by an accurate summary, reviewers must read through the entire code diff line by line
-- They need to construct their own understanding of what the changes do, rather than verifying a provided explanation
-- Additional review rounds may be needed to clarify discrepancies between the description and the code
+- **Verification pass.** A second LLM call reads the diff and the description and flags the mismatch.
+- **Heuristic checks.** Files mentioned in the description should appear in the diff. Stated bug categories should match the test failures being touched.
+- **Description regeneration.** Throw away the description the agent wrote during planning. Generate a new one from the final diff alone.
 
-In aggregate, these delays create significant friction in the development pipeline. When AI agents are expected to accelerate development, producing PRs that slow down the review process directly undermines their value proposition.
+For teams using these agents: assume descriptions are unreliable until proven otherwise. Build a habit of skimming the diff first, the description second.
 
-## Implications
+For the field: stop evaluating agents only on code. **A pull request is a deliverable, and the description is part of the deliverable.** An agent that writes correct code with a misleading PR is not a good agent — it's a fast way to destroy reviewer trust.
 
-### For AI Agent Developers
+## The real story
 
-The findings make a strong case for investing in **description verification mechanisms**. Agent developers should implement a separate validation step that checks whether the generated PR description accurately reflects the actual code changes. This could take several forms:
+As agents become less assistants and more autonomous contributors, the bottleneck shifts. It's not whether they can write code. They can. The question is whether they can be trusted to *describe what they wrote*.
 
-- **Secondary LLM pass**: A separate model (or the same model in a distinct context) reads both the code diff and the generated description, flagging inconsistencies
-- **Heuristic checks**: Lightweight rules that verify basic alignment (e.g., files mentioned in the description actually appear in the diff, described bug types match the actual error patterns)
-- **Post-generation description regeneration**: Instead of using the description generated during the planning phase, regenerate the description from the final code diff to ensure it reflects the actual outcome
-
-### For Development Teams
-
-Teams using AI coding agents should calibrate their review processes to account for potential description unreliability. In high-stakes codebases, this might mean:
-
-- Developing a systematic habit of verifying PR descriptions against the actual code changes before beginning detailed review
-- Implementing automated tools that flag potential description-code mismatches
-- Considering independent description generation through a separate process
-
-### For Researchers
-
-This study highlights that evaluating AI coding agents on code quality alone provides an incomplete picture. The full deliverable package includes code, commit messages, PR descriptions, and documentation. Inconsistency in any of these components can undermine the practical utility of the agent's work, even when the code itself is technically sound. Future evaluation frameworks should assess these artifacts holistically.
-
-## The Trust Dimension
-
-As AI coding agents move from assistants to increasingly autonomous contributors, **trust** becomes a central concern. Trust in software development is not built solely on code correctness — it requires transparency and honest communication about what changes are being made and why.
-
-Our findings reveal that current agents have meaningful room for improvement on this dimension. The code may be technically correct, but the narrative they construct about their own work is not always reliable. Addressing message-code inconsistency is an important step toward AI agents that development teams can trust — not just to write good code, but to communicate clearly and honestly about what they have done.
+Right now, on 1.7% of attempts, they can't. And that 1.7% is doing more damage to the relationship between humans and agents than any compile error ever could.
 
 ---
 
-*Published at the 23rd International Conference on Mining Software Repositories (MSR 2026) — Mining Challenge. This research was conducted at University College London (UCL) and King's College London.*
+### Reference
+
+This post is a divulgative summary of:
+
+> Pinna, G., Sarro, F., Sutton, C. (2026). *Analyzing Message-Code Inconsistency in AI Coding Agent-Authored Pull Requests*. In: **Proceedings of the 23rd International Conference on Mining Software Repositories (MSR 2026)** — Mining Challenge Track.
+>
+> [Read the original paper (PDF)](/images/msr2026-message-code-inconsistency/MSR_Challenge_2026_Message_Code_Inconsistency.pdf)
+
+*Research conducted at University College London (UCL) and King's College London.*

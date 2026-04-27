@@ -1,96 +1,106 @@
 ---
-title: "Esplorare l'Effetto del Genetic Improvement sul Codice Generato dagli LLM"
+title: "Rendere davvero intelligente la pipeline LLM-più-evoluzione"
 date: 2025-07-01
 draft: false
 tags: ["Genetic Improvement", "LLM", "Selezione Lexicase", "Down-Sampling", "Generazione di Codice"]
 categories: ["Ricerca"]
-description: "Uno studio esteso sull'uso del Genetic Improvement con strategie di selezione avanzate per migliorare il codice generato dagli LLM, dimostrando miglioramenti in 11 su 12 combinazioni modello-problema."
+description: "L'anno scorso abbiamo mostrato che l'evoluzione può sistemare il codice degli LLM. Quest'anno abbiamo reso più intelligente l'evoluzione stessa — selezione migliore, credito parziale, meno cicli — ottenendo miglioramenti in 11 casi su 12."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/sncs2025-exploring-gi-effect/pipeline.png"
+  alt: "Pipeline GI potenziata con selezione lexicase e fitness raffinata"
+  hiddenInList: false
 ---
 
-{{< summary-box title="Abstract" >}}
-Questo articolo estende il nostro lavoro di EuroGP 2024 sul miglioramento del codice generato dagli LLM tramite Genetic Improvement, introducendo tre avanzamenti chiave: la selezione lexicase per preservare soluzioni specialiste, il down-sampling al 10% per l'efficienza computazionale e una funzione di fitness raffinata (F_E) con punteggio a credito parziale. Valutato su GPT-4, ChatGPT, Code Llama 7B e LLaMA 3 8B attraverso tre problemi PSB2 con popolazioni di 200 individui per 100 generazioni, la pipeline migliorata ottiene miglioramenti in 11 su 12 combinazioni modello-problema. I guadagni più forti si osservano sui modelli più piccoli, rafforzando la scoperta che il Genetic Improvement agisce come "amplificatore di capacità" — compensando la capacità limitata del modello in modo più efficace di quanto non migliori modelli già forti. Pubblicato su SN Computer Science, 2025.
+{{< summary-box title="TL;DR" >}}
+Il nostro lavoro a EuroGP 2024 ha mostrato che il Genetic Improvement (GI) può salvare il codice generato da LLM. Questo seguito rende più intelligente la parte GI in sé. Tre upgrade: **selezione lexicase** per tenere vivi gli specialisti, **down-sampling al 10%** per ridurre il compute, e una **funzione di fitness raffinata (F_E)** che dà credito parziale anziché pass/fail. Su quattro LLM (GPT-4, ChatGPT, Code Llama 7B, LLaMA 3 8B) e tre problemi PSB2, abbiamo migliorato **11 combinazioni modello-problema su 12**. I modelli più piccoli guadagnano di più. Il GI è, sempre più, un **amplificatore di capacità** per modelli economici.
 {{< /summary-box >}}
 
-## Introduzione
+## Cosa avevamo lasciato sul tavolo l'ultima volta
 
-Nel nostro precedente lavoro a EuroGP 2024, abbiamo dimostrato che il Genetic Improvement (GI) combinato con l'Evoluzione Grammaticale può migliorare sistematicamente il codice generato dai Large Language Models. Quello studio ha stabilito la fattibilità fondamentale dell'approccio. Ma diverse domande rimanevano aperte: la ricerca evolutiva potrebbe essere resa più efficace con migliori strategie di selezione? L'approccio funzionerebbe anche con modelli più recenti e capaci? E potremmo sviluppare una funzione di fitness più informativa che fornisca un feedback più granulare al processo evolutivo?
+Il paper di EuroGP 2024 ha dimostrato l'idea base: prendi la prima bozza buggata di un LLM, passala alla Grammatical Evolution, ricevi codice migliore. Guadagni statisticamente significativi su ogni modello.
 
-Questo articolo, pubblicato su **SN Computer Science (2025)**, affronta tutte e tre le domande. Abbiamo esteso il nostro framework originale con la **selezione lexicase**, il **down-sampling** e una **funzione di fitness raffinata**, valutando poi la pipeline migliorata su LLM aggiornati tra cui Code Llama e LLaMA 3.
+Ma l'evoluzione in sé era grezza. Selezione a torneo. Funzione di fitness binaria. Un budget di ricerca che scalava male con il numero di test case. Avevamo una pipeline funzionante che lasciava vincite per terra.
 
-## Avanzamento della Strategia di Selezione
+Questo paper è l'audit. Abbiamo ricostruito tre pezzi del loop GI — selezione, sampling, fitness — e abbiamo chiesto se un'evoluzione più intelligente compra di più.
 
-### I Limiti della Selezione a Torneo
+Risposta breve: sì.
 
-Il nostro approccio originale utilizzava la selezione a torneo — una strategia semplice in cui gli individui competono in piccoli gruppi casuali e il migliore viene selezionato per la riproduzione. Sebbene efficace e computazionalmente economica, la selezione a torneo ha una limitazione ben documentata: tende a favorire i generalisti rispetto agli specialisti. Un individuo che performa moderatamente bene su tutti i casi di test verrà preferito rispetto a uno che risolve perfettamente un sottoinsieme di casi ma fallisce su altri.
+![Pipeline potenziata: lexicase + down-sampling + fitness F_E sopra il GI con seme LLM](/images/sncs2025-exploring-gi-effect/pipeline.png)
 
-Nella sintesi di programmi, questo è uno svantaggio significativo. Una variante di programma che gestisce perfettamente tutti i casi limite con interi ma fallisce sui numeri negativi contiene soluzioni parziali preziose — ma la selezione a torneo potrebbe scartarla a favore di un mediocre generalista.
+## Perché la selezione a torneo è il default sbagliato
 
-### Selezione Lexicase
+La selezione a torneo prende individui con mini-competizioni: ne peschi a caso un gruppo, tieni il migliore. È veloce e facile e ha una debolezza nota — **ama i generalisti e uccide gli specialisti**.
 
-La **selezione lexicase** affronta questo problema valutando gli individui sui casi di test uno alla volta in ordine casuale. Il processo di selezione parte dall'intera popolazione, poi filtra iterativamente gli individui che non sono tra i migliori su ciascun caso di test successivo. Questo preserva naturalmente gli specialisti — individui che eccellono su sottoinsiemi specifici di casi di test sopravvivono anche se la loro performance complessiva non è eccezionale.
+Questo conta per il codice. Immagina due varianti della bozza di un LLM:
 
-I vantaggi teorici della selezione lexicase per la sintesi di programmi sono ben stabiliti nella letteratura sul calcolo evolutivo. Il nostro contributo è dimostrarne l'efficacia nel contesto specifico del miglioramento del codice generato dagli LLM.
+- Variante A: passa il 60% dei test case, fallisce gli altri in modo mediocre.
+- Variante B: massimo dei voti su tutti i test sui numeri interi, fallisce sulla manipolazione di stringhe.
 
-### Down-Sampling per l'Efficienza
+La Variante A vince il torneo ogni volta. La Variante B porta conoscenza parziale preziosa che il crossover avrebbe potuto combinare con un altro specialista sulle stringhe — ma non supera mai il primo turno.
 
-La selezione lexicase diventa computazionalmente costosa quando il numero di casi di test è grande (nel nostro caso, fino a 1.000 per problema). Il **down-sampling** affronta questo selezionando casualmente un sottoinsieme di casi di test per ogni generazione. Questo riduce il costo computazionale per generazione mantenendo la pressione selettiva sull'intera suite di test nel tempo, poiché sottoinsiemi diversi vengono campionati in ogni generazione.
+La selezione a torneo tratta il miglioramento dei programmi come una singola dimensione. I programmi reali falliscono lungo *molte* dimensioni contemporaneamente.
 
-Abbiamo sperimentato un tasso di down-sampling del 10% — utilizzando solo 100 dei 1.000 casi di test disponibili per generazione — e abbiamo trovato che questo forniva un eccellente equilibrio tra efficienza e qualità della selezione.
+## Lexicase: tenere vivi gli stravaganti
 
-## Una Funzione di Fitness Più Informativa
+La **selezione lexicase** valuta i candidati un test case alla volta, in ordine casuale, filtrando chiunque non sia tra i migliori a parimerito su quel caso. L'ordine viene rimescolato ad ogni evento di selezione, quindi essere uno specialista su *qualunque* sottoinsieme di casi è una strategia di sopravvivenza.
 
-La nostra funzione di fitness originale era la semplice proporzione di casi di test superati. Sebbene intuitiva, questa valutazione binaria per caso di test scarta informazioni utili. Consideriamo un caso di test che si aspetta l'output `[1, 2, 3, 4, 5]`: un programma che produce `[1, 2, 3, 4, 6]` (un elemento sbagliato) ottiene lo stesso punteggio di uno che produce `"hello"` (completamente sbagliato).
+Sembra costoso — e su 1.000 test case per problema lo sarebbe. Quindi l'abbiamo accoppiata al **down-sampling**: ad ogni generazione si usa solo il 10% dei test case. Un 10% diverso ogni generazione, così l'intero test set continua a esercitare pressione nel tempo, solo distribuita.
 
-Abbiamo sviluppato una funzione di fitness raffinata **F_E** che incorpora il credito parziale. Invece di verificare solo se ogni output corrisponde esattamente, F_E misura quanto ogni output è *vicino* al risultato atteso. Per output numerici, questo potrebbe usare la differenza assoluta; per sequenze, potrebbe considerare il confronto elemento per elemento. Questo feedback più granulare aiuta il processo evolutivo a distinguere tra varianti "quasi corrette" e "completamente sbagliate", fornendo migliori informazioni di gradiente per la ricerca.
+La combinazione tiene vivi gli specialisti senza il conto in compute del lexicase pieno su set di test pieni.
 
-## Setup Sperimentale
+## Dare alla ricerca una bussola più fine
 
-Abbiamo valutato la pipeline migliorata su **tre problemi PSB2** selezionati per i loro diversi livelli di difficoltà, utilizzando **quattro LLM**:
+La funzione di fitness originale era la frazione di test case superati. Binaria per caso. Un test che si aspetta `[1, 2, 3, 4, 5]` premia `[1, 2, 3, 4, 6]` (una cifra sbagliata) come `"hello"` (caos semantico).
 
-- **GPT-4**: Il modello di punta di OpenAI
-- **ChatGPT (GPT-3.5-turbo)**: Il modello conversazionale ampiamente utilizzato
-- **Code Llama 7B**: Il modello specializzato per il codice di Meta
-- **LLaMA 3 8B**: Il modello open-source di ultima generazione di Meta
+Quella è informazione di gradiente sprecata. Abbiamo costruito **F_E**, una funzione di fitness che misura *quanto vicino* è l'output a quello atteso, per ciascun test case. Per i numeri, la distanza. Per le sequenze, confronto elemento per elemento. Ora "quasi giusto" è un numero diverso da "completamente sbagliato", e la ricerca può salire la collina giusta invece di trattare tutto il paesaggio come un dirupo.
 
-I parametri evolutivi sono stati aggiustati rispetto al nostro studio originale:
+## Cosa abbiamo fatto girare
 
-- **Dimensione della popolazione**: 200 (ridotta da 1.000, riflettendo la strategia di selezione più efficiente)
-- **Generazioni**: fino a 100
-- **Selezione lexicase** con **10% di down-sampling**
-- Ogni esperimento ripetuto 30 volte per robustezza statistica
+Quattro LLM lungo lo spettro: GPT-4, ChatGPT, Code Llama 7B, LLaMA 3 8B. Tre problemi PSB2 scelti per varietà di difficoltà. Popolazione di 200 individui (giù da 1.000 — selezione migliore significa meno bisogno di forza bruta), fino a 100 generazioni, 30 ripetizioni ciascuna per robustezza statistica.
 
-## Risultati
+## Cosa abbiamo ottenuto
 
-La pipeline migliorata ha ottenuto miglioramenti in **11 su 12 combinazioni modello-problema** — un risultato notevolmente consistente che valida sia la strategia di selezione lexicase sia la funzione di fitness raffinata.
+**11 combinazioni modello-problema su 12 sono migliorate.** Non è fortuna.
 
-I risultati chiave includono:
+Qualche dettaglio degno di nota:
 
-**Guadagni più forti sui modelli più piccoli.** Coerentemente con il nostro lavoro precedente, i maggiori miglioramenti relativi sono stati osservati sui modelli meno capaci. Code Llama 7B e LLaMA 3 8B — entrambi significativamente più piccoli di GPT-4 — hanno mostrato i guadagni più drammatici dal GI. Questo rinforza la scoperta che il GI è particolarmente prezioso come "amplificatore di capacità" per modelli open-source o con risorse limitate.
+- **I modelli più piccoli hanno guadagnato di più, di nuovo.** Code Llama 7B e LLaMA 3 8B hanno avuto i salti relativi più grandi. Anche GPT-4 ha guadagnato, ma in termini assoluti il suo punto di partenza era già forte.
+- **Lexicase mantiene davvero la diversità.** Si vedeva nelle dinamiche di popolazione — più specialisti distinti che coesistevano per molte generazioni, ricombinandosi via crossover in ibridi che né la selezione a torneo né la self-correction avrebbero mai scoperto.
+- **Il down-sampling è essenzialmente gratis.** Tagliare le valutazioni al 10% dei test case per generazione non ha degradato la qualità della soluzione finale sui nostri problemi. Conta: il GI è molto più deployabile quando il costo per generazione è sopportabile.
+- **F_E paga di più sui problemi difficili.** Quando il seme dell'LLM è già vicino, credito parziale e credito binario convergono. Quando il seme è lontano, F_E dà alla ricerca qualcosa da seguire.
 
-**La selezione lexicase preserva diversità utile.** Le dinamiche di popolazione sotto selezione lexicase erano qualitativamente diverse dalla selezione a torneo. Abbiamo osservato una maggiore diversità fenotipica mantenuta durante l'intera esecuzione evolutiva, con la popolazione contenente specialisti per diversi sottoinsiemi di casi di test. Questa diversità si è tradotta in una migliore esplorazione dello spazio delle soluzioni.
+## E ancora una volta, il GI batte la self-correction
 
-**Il down-sampling è efficace.** Utilizzare solo il 10% dei casi di test per generazione non ha degradato significativamente la qualità delle soluzioni rispetto all'uso dell'intera suite di test, riducendo sostanzialmente il costo computazionale. Questo rende l'approccio più pratico per il deployment nel mondo reale dove i budget di valutazione sono limitati.
+Abbiamo rifatto il confronto con la self-correction. Stessa conclusione dell'anno scorso, con evidenza più forte: **il loop evolutivo trova fix che il modello non trova ri-promptandosi da solo**, soprattutto quando il codice originale ha problemi strutturali a cui il modello è cieco.
 
-**La funzione di fitness raffinata aiuta di più sui problemi più difficili.** Per problemi facili dove il codice iniziale dell'LLM è già vicino alla correttezza, la funzione di fitness binaria e F_E producono risultati simili. Ma per problemi più difficili dove il codice iniziale è lontano dalla correttezza, F_E fornisce informazioni di gradiente significativamente migliori, aiutando la ricerca a navigare verso le soluzioni in modo più efficiente.
+Se stai già usando self-correction in produzione, questo non è un sostituto — è uno stack. Fai prima self-correct se vuoi; poi esegui il GI sopra. Le due modalità di fallimento sono diverse, e i guadagni si compongono.
 
-## Confronto con la Self-Correction
+## Cosa conferma
 
-Abbiamo nuovamente confrontato il nostro approccio GI con la self-correction dell'LLM, confermando e rafforzando i nostri risultati precedenti. L'approccio evolutivo ha costantemente superato la self-correction, in particolare sui problemi dove il codice iniziale aveva problemi strutturali fondamentali che il meccanismo di correzione dell'LLM stesso non riusciva a superare.
+La lezione di quadro generale non è cambiata da EuroGP 2024, ma si sta facendo più solida: **il GI è un amplificatore di capacità**. Comprime il divario tra modelli economici e modelli costosi. Un modello da 7B parametri con un loop GI intelligente sopra può arrivare nello stesso quartiere di un modello frontier che gira nudo — a una frazione del costo di inferenza.
 
-Questa è un'importante scoperta pratica: significa che anche per le organizzazioni che già utilizzano la self-correction nelle loro pipeline di generazione di codice LLM, l'aggiunta di una fase GI fornisce miglioramenti aggiuntivi e complementari.
+Per organizzazioni che non possono permettersi di chiamare GPT-4 ad ogni richiesta di generazione di codice, questa non è una nota a piè di pagina. È il titolo.
 
-## Limitazioni e Direzioni Future
+## Cosa è ancora difficile
 
-Abbiamo identificato diverse limitazioni importanti che guidano la ricerca futura:
+Tre limitazioni oneste:
 
-1. **Dipendenza dall'oracolo**: Il nostro approccio richiede casi di test (o un oracolo) per valutare il fitness. I problemi senza suite di test chiare sono più difficili da affrontare.
-2. **Scalabilità**: La valutazione attuale riguarda programmi relativamente piccoli. Scalare a task di ingegneria del software più grandi e multi-file rimane una sfida aperta.
-3. **Bias dell'LLM nella grammatica**: La grammatica generata dinamicamente eredita bias strutturali dall'output dell'LLM, potenzialmente limitando lo spazio dei miglioramenti scopribili.
+- **Dipendenza dall'oracolo.** Il GI ha bisogno di un segnale di fitness. Niente test case? Sei bloccato. Generare test automaticamente è un altro problema difficile a parte.
+- **Scala.** PSB2 sono programmi piccoli. Non sappiamo ancora come si comporti su modifiche multi-file a livello di repository.
+- **Bias della grammatica.** Costruire la grammatica delle mutazioni dall'output dell'LLM significa che la grammatica eredita i punti ciechi dell'LLM. Se il modello non produce mai un ciclo `while`, neanche la ricerca lo esplorerà mai.
 
-Queste limitazioni motivano il lavoro in corso su approcci GI senza grammatica, tecniche di approssimazione del fitness e integrazione con flussi di lavoro di ingegneria del software su scala più ampia.
+Queste sono le prossime cose che inseguiamo.
 
 ---
 
-*Pubblicato su SN Computer Science, Volume 6, Numero 7, 2025. Questa ricerca è stata condotta presso l'Università degli Studi di Trieste e la NOVA Information Management School (NOVA IMS), Universidade Nova de Lisboa.*
+### Reference
+
+Questo post è una sintesi divulgativa di:
+
+> Pinna, G., Manzoni, L., De Lorenzo, A., Castelli, M. (2025). *Exploring the Effect of Genetic Improvement for Large Language Models generated Code*. **SN Computer Science**, 6(7).
+>
+> [Leggi il paper originale (PDF)](/images/sncs2025-exploring-gi-effect/2024_SNCS_Exploring_the_Effect_of_Genetic_Improvement_for_Large_Language_Models_generated_Code.pdf)
+
+*Ricerca condotta presso l'Università degli Studi di Trieste e la NOVA Information Management School (NOVA IMS), Universidade Nova de Lisboa.*
