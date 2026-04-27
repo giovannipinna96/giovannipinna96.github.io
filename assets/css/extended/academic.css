@@ -1962,3 +1962,50 @@ a {
     height: 160px;
   }
 }
+/* --- Bottom-of-page socials (post-footer share section) ---
+   Centered, blue background, white icons — distinct from the home-page
+   profile socials which keep their default neutral styling. */
+.post-footer .social-icons-row {
+  justify-content: center;
+  margin: 24px auto 8px;
+  gap: 16px;
+}
+
+.post-footer .social-icons-row a {
+  background: var(--accent);
+  color: #ffffff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(21, 101, 192, 0.25);
+}
+
+.post-footer .social-icons-row a svg {
+  width: 22px;
+  height: 22px;
+  fill: #ffffff;
+  color: #ffffff;
+}
+
+.post-footer .social-icons-row a:hover {
+  background: #0d47a1;             /* darker blue on hover */
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(13, 71, 161, 0.35);
+}
+
+:root[data-theme="dark"] .post-footer .social-icons-row a {
+  background: var(--accent-dark);
+  color: #0b1220;
+  box-shadow: 0 2px 6px rgba(100, 181, 246, 0.25);
+}
+
+:root[data-theme="dark"] .post-footer .social-icons-row a svg {
+  fill: #0b1220;
+  color: #0b1220;
+}
+
+:root[data-theme="dark"] .post-footer .social-icons-row a:hover {
+  background: #ffffff;
+  color: #0b1220;
+}
