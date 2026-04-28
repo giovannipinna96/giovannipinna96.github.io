@@ -8,7 +8,7 @@ description: "We asked 75 people to read summaries of Italian Constitutional Cou
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/wiat2024-courts-to-comprehension/percentuale_delle_risposte_corrette_per_titolo_di_studio.png"
+  image: "/images/post-placeholder.svg"
   alt: "Comprehension rates across text types and educational background"
   hiddenInList: false
 ---

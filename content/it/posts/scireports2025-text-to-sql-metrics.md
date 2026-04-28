@@ -8,8 +8,8 @@ description: "Tutti i benchmark text-to-SQL di oggi valutano le query come perfe
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/scireports2025-text-to-sql-metrics/Figure2.png"
-  alt: "QAS — Query Accuracy Score che combina similarità semantica e di tabella"
+  image: "/images/post-placeholder.svg"
+  alt: "QAS — Query Accuracy Score combining semantic and table similarity"
   hiddenInList: false
 ---
 

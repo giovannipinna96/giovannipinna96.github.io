@@ -5,11 +5,17 @@ draft: false
 description: "Una piattaforma che combina marketing e AI per analizzare il pubblico e generare contenuti mirati per i social media."
 tags: ["AI", "Marketing", "NLP", "Machine Learning"]
 ShowToc: false
+cover:
+  image: "/images/project-placeholder.svg"
+  alt: "Default project logo"
+  hiddenInList: false
 ---
 
 ## Influence — Il Marketing incontra l'AI
 
 **Influence** è un progetto che combina strategie di marketing con l'intelligenza artificiale per analizzare i dati degli utenti e generare contenuti per i social media su misura per gli interessi del pubblico.
+
+[![Presentazione del progetto Influence](https://img.youtube.com/vi/NXmEs4L-rRg/0.jpg)](https://youtu.be/NXmEs4L-rRg?si=Q3pYlNx4kOm6DlGz)
 
 ### Funzionalità
 

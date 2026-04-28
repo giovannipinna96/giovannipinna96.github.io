@@ -8,7 +8,7 @@ description: "Classifying urgent software hotfixes is hard: tiny dataset, brutal
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/ssbse2025-hotcat/architecture_diagram_4.png"
+  image: "/images/post-placeholder.svg"
   alt: "HotCat: NSGA-II feature selection for hotfix bug classification"
   hiddenInList: false
 ---

@@ -8,8 +8,8 @@ description: "Abbiamo analizzato 7.156 pull request di cinque agenti di codifica
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/msr2026-comparing-ai-agents/Figure1.png"
-  alt: "Tassi di accettazione tra agenti di codifica AI e tipi di task"
+  image: "/images/post-placeholder.svg"
+  alt: "Acceptance rates across AI coding agents and task types"
   hiddenInList: false
 ---
 

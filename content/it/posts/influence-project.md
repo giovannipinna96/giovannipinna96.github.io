@@ -7,6 +7,10 @@ categories: ["Progetti"]
 description: "Un progetto che esplora l'intersezione tra marketing e intelligenza artificiale, utilizzando l'analisi dei dati per generare contenuti mirati per i social media."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/influence-project/influence-project.jpg"
+  alt: "influence Project logo"
+  hiddenInList: false
 ---
 
 ## Panoramica del Progetto

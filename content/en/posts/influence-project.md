@@ -7,6 +7,10 @@ categories: ["Projects"]
 description: "A project exploring the intersection of marketing and artificial intelligence, using data analysis to generate targeted social media content."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/influence-project/influence-project.jpg"
+  alt: "influence Project logo"
+  hiddenInList: false
 ---
 
 ## Project Overview

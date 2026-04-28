@@ -8,7 +8,7 @@ description: "We looked at 7,156 pull requests from five AI coding agents on rea
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/msr2026-comparing-ai-agents/Figure1.png"
+  image: "/images/post-placeholder.svg"
   alt: "Acceptance rates across AI coding agents and task types"
   hiddenInList: false
 ---

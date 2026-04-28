@@ -7,6 +7,10 @@ categories: ["Books"]
 description: "A review of Daniel Kahneman's Nobel Prize-winning work on how we make decisions and the cognitive biases that influence our thinking."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/pensieri-lenti-e-veloci/pensieri-lenti-e-veloci.jpg"
+  alt: "Cover pensieri-lenti-e-veloci"
+  hiddenInList: false
 ---
 
 ## Overview

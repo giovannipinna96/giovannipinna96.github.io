@@ -8,7 +8,7 @@ description: "Last year we showed evolution can fix LLM code. This year we made 
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/sncs2025-exploring-gi-effect/pipeline.png"
+  image: "/images/post-placeholder.svg"
   alt: "Enhanced GI pipeline with lexicase selection and refined fitness"
   hiddenInList: false
 ---

@@ -8,7 +8,7 @@ description: "Self-correction is the default fix for buggy LLM code, but it has 
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/eurogp2024-gi-for-llm-code/gi_workflow.png"
+  image: "/images/post-placeholder.svg"
   alt: "Genetic Improvement workflow for LLM-generated code"
   hiddenInList: false
 ---

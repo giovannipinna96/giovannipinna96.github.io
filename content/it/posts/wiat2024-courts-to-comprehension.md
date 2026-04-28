@@ -8,8 +8,8 @@ description: "Abbiamo chiesto a 75 persone di leggere riassunti di sentenze dell
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/wiat2024-courts-to-comprehension/percentuale_delle_risposte_corrette_per_titolo_di_studio.png"
-  alt: "Tassi di comprensione tra tipi di testo e titolo di studio"
+  image: "/images/post-placeholder.svg"
+  alt: "Comprehension rates across text types and educational background"
   hiddenInList: false
 ---
 

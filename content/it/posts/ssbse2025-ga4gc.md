@@ -8,8 +8,8 @@ description: "Gli agenti AI che 'ottimizzano' il tuo codice possono costare più
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/ssbse2025-ga4gc/workflow.png"
-  alt: "GA4GC: NSGA-II tuna la configurazione di un agente di codifica AI"
+  image: "/images/post-placeholder.svg"
+  alt: "GA4GC: NSGA-II tuning the configuration of an AI coding agent"
   hiddenInList: false
 ---
 

@@ -8,8 +8,8 @@ description: "La self-correction è il rimedio standard per il codice buggato de
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/eurogp2024-gi-for-llm-code/gi_workflow.png"
-  alt: "Pipeline di Genetic Improvement per codice generato da LLM"
+  image: "/images/post-placeholder.svg"
+  alt: "Genetic Improvement workflow for LLM-generated code"
   hiddenInList: false
 ---
 

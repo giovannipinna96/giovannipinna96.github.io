@@ -8,8 +8,8 @@ description: "L'anno scorso abbiamo mostrato che l'evoluzione può sistemare il 
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/sncs2025-exploring-gi-effect/pipeline.png"
-  alt: "Pipeline GI potenziata con selezione lexicase e fitness raffinata"
+  image: "/images/post-placeholder.svg"
+  alt: "Enhanced GI pipeline with lexicase selection and refined fitness"
   hiddenInList: false
 ---
 

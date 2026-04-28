@@ -8,7 +8,7 @@ description: "AI coding agents that 'optimize' your code can cost more energy th
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/ssbse2025-ga4gc/workflow.png"
+  image: "/images/post-placeholder.svg"
   alt: "GA4GC: NSGA-II tuning the configuration of an AI coding agent"
   hiddenInList: false
 ---

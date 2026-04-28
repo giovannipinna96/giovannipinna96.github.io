@@ -8,8 +8,8 @@ description: "Solo l'1,7% delle pull request scritte da agenti AI ha descrizioni
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/msr2026-message-code-inconsistency/workflow.png"
-  alt: "Pipeline per l'analisi dell'inconsistenza messaggio-codice in PR generate da AI"
+  image: "/images/post-placeholder.svg"
+  alt: "Workflow of message-code inconsistency analysis on AI-authored pull requests"
   hiddenInList: false
 ---
 

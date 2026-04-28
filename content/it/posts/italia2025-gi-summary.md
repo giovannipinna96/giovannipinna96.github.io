@@ -7,6 +7,10 @@ categories: ["Ricerca"]
 description: "Un riepilogo completo del nostro programma di ricerca sull'applicazione del Genetic Improvement al codice generato dagli LLM, presentato alla conferenza nazionale italiana sull'IA Ital-IA 2025."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/post-placeholder.svg"
+  alt: "Genetic Improvement workflow for LLM-generated code"
+  hiddenInList: false
 ---
 
 {{< summary-box title="Abstract" >}}

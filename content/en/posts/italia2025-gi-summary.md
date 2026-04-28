@@ -7,6 +7,10 @@ categories: ["Research"]
 description: "A comprehensive summary of our research program on applying Genetic Improvement to LLM-generated code, presented at the Italian national AI conference Ital-IA 2025."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/post-placeholder.svg"
+  alt: "Genetic Improvement workflow for LLM-generated code"
+  hiddenInList: false
 ---
 
 {{< summary-box title="Abstract" >}}

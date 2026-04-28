@@ -8,7 +8,7 @@ description: "Only 1.7% of AI-authored pull requests have descriptions that don'
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/msr2026-message-code-inconsistency/workflow.png"
+  image: "/images/post-placeholder.svg"
   alt: "Workflow of message-code inconsistency analysis on AI-authored pull requests"
   hiddenInList: false
 ---

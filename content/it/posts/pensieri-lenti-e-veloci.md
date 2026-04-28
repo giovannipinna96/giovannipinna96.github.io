@@ -7,6 +7,10 @@ categories: ["Libri"]
 description: "Una recensione dell'opera di Daniel Kahneman, vincitore del Premio Nobel, su come prendiamo decisioni e i bias cognitivi che influenzano il nostro pensiero."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/pensieri-lenti-e-veloci/pensieri-lenti-e-veloci.jpg"
+  alt: "Cover pensieri-lenti-e-veloci"
+  hiddenInList: false
 ---
 
 ## Panoramica

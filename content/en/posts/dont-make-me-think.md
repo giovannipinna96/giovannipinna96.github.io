@@ -7,6 +7,10 @@ categories: ["Books"]
 description: "A review of Steve Krug's classic guide to web usability and human-computer interaction."
 ShowToc: true
 TocOpen: false
+cover:
+  image: "/images/blog-placeholder.svg"
+  alt: "Default blog img"
+  hiddenInList: false
 ---
 
 ## Overview
