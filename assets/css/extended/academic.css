@@ -2010,3 +2010,125 @@ a {
   background: #ffffff;
   color: #0b1220;
 }
+
+/* --- Article images: centered, smaller, with sane sizing for SVG covers ---
+   Applies to:
+   - .entry-cover (the big banner cover at the top of single posts/projects)
+   - .post-content img (inline markdown images inside the article body)
+   PaperMod's default makes covers full-width which looks bad for SVG/square
+   placeholders and oversized for figures. We cap and center them. */
+
+.post-single .entry-cover {
+  max-width: 520px;
+  margin: 18px auto 24px;
+  text-align: center;
+}
+
+.post-single .entry-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: var(--radius);
+}
+
+/* Inline markdown images inside posts/projects */
+.post-content p > img,
+.post-content > img,
+.post-content figure > img {
+  display: block;
+  max-width: 70%;
+  height: auto;
+  margin: 18px auto;
+  border-radius: 6px;
+}
+
+/* Mobile: let them breathe a bit wider since the screen is narrower */
+@media (max-width: 600px) {
+  .post-single .entry-cover {
+    max-width: 100%;
+  }
+  .post-content p > img,
+  .post-content > img,
+  .post-content figure > img {
+    max-width: 100%;
+  }
+}
+and strokes. */
+}
+
+.post-footer .social-icons-row a:hover {
+  background: #0d47a1;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(13, 71, 161, 0.35);
+}
+
+:root[data-theme="dark"] .post-footer .social-icons-row a {
+  background: var(--accent-dark);
+  color: #0b1220;
+  box-shadow: 0 2px 6px rgba(100, 181, 246, 0.25);
+}
+
+:root[data-theme="dark"] .post-footer .social-icons-row a svg {
+  /* color inherits from the <a> in dark mode (#0b1220) */
+}
+
+:root[data-theme="dark"] .post-footer .social-icons-row a:hover {
+  background: #ffffff;
+  color: #0b1220;
+}
+
+/* --- Article images: centered, smaller, with sane sizing for SVG covers ---
+   PaperMod's default makes covers full-width which looks bad for SVG/square
+   placeholders and oversized for figures. Cap and center them. */
+.post-single .entry-cover {
+  max-width: 520px;
+  margin: 18px auto 24px;
+  text-align: center;
+}
+
+.post-single .entry-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 420px;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: var(--radius);
+}
+
+/* Inline markdown images inside posts/projects */
+.post-content p > img,
+.post-content > img,
+.post-content figure > img {
+  display: block;
+  max-width: 70%;
+  height: auto;
+  margin: 18px auto;
+  border-radius: 6px;
+}
+
+/* Embedded YouTube iframe (Hugo's youtube shortcode wraps in
+   <div style="position: relative; padding-bottom: 56.25%; ..."> already,
+   but we cap the wrapper width and center it for consistency with the
+   rest of the article images). */
+.post-content > div[style*="padding-bottom"],
+.post-content p > div[style*="padding-bottom"] {
+  max-width: 720px;
+  margin: 24px auto;
+}
+
+@media (max-width: 600px) {
+  .post-single .entry-cover {
+    max-width: 100%;
+  }
+  .post-content p > img,
+  .post-content > img,
+  .post-content figure > img,
+  .post-content > div[style*="padding-bottom"] {
+    max-width: 100%;
+  }
+}
