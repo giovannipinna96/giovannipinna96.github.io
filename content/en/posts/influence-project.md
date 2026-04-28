@@ -8,7 +8,7 @@ description: "A project exploring the intersection of marketing and artificial i
 ShowToc: true
 TocOpen: false
 cover:
-  image: "/images/influence-project/influence-project.jpg"
+  image: "/images/influence-project/influence.jpg"
   alt: "influence Project logo"
   hiddenInList: false
 ---
